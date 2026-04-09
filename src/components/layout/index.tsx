@@ -135,7 +135,7 @@ export function FAB({ onClick, label }: FABProps) {
   return (
     <button
       onClick={onClick}
-      className="absolute bottom-4 right-4 w-14 h-14 bg-accent text-white rounded-[18px] flex items-center justify-center active:scale-95 transition-transform"
+      className="fixed bottom-4 right-4 w-14 h-14 bg-accent text-white rounded-[18px] flex items-center justify-center active:scale-95 transition-transform"
       aria-label={label ?? 'Adicionar'}
     >
       <svg width="24" height="24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">

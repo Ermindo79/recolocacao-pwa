@@ -1,3 +1,4 @@
+import { useUIStore } from '../stores/ui.store'
 import React, { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useContatos } from '../hooks'
@@ -306,7 +307,4 @@ function NovoEventoModal({ data, contatos, onClose, onSave }: {
   )
 }
 
-function useUIStore() {
-  const { useUIStore: store } = require('../stores/ui.store')
-  return store()
-}
+
