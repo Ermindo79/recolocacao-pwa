@@ -4,7 +4,6 @@ import { clsx } from '../../utils'
 import { useUIStore } from '../../stores/ui.store'
 import { ToastItem, OfflineBanner } from '../ui'
 
-// ─── Bottom Nav ──────────────────────────────────────────────────────────────
 const NAV_ITEMS = [
   {
     to: '/', label: 'Dashboard',
@@ -39,6 +38,17 @@ const NAV_ITEMS = [
     ),
   },
   {
+    to: '/calendario', label: 'Agenda',
+    icon: (active: boolean) => (
+      <svg width="22" height="22" fill="none" stroke={active ? '#1C3D5A' : '#9A9A95'} strokeWidth="1.8" strokeLinecap="round">
+        <rect x="3" y="4" width="18" height="18" rx="2" />
+        <line x1="16" y1="2" x2="16" y2="6" />
+        <line x1="8" y1="2" x2="8" y2="6" />
+        <line x1="3" y1="10" x2="21" y2="10" />
+      </svg>
+    ),
+  },
+  {
     to: '/narrativa', label: 'Narrativa',
     icon: (active: boolean) => (
       <svg width="22" height="22" fill="none" stroke={active ? '#1C3D5A' : '#9A9A95'} strokeWidth="1.8" strokeLinecap="round">
@@ -54,13 +64,13 @@ const NAV_ITEMS = [
 export function BottomNav() {
   const location = useLocation()
   return (
-    <nav className="bg-white border-t border-[rgba(26,26,24,0.10)] flex justify-around items-center px-2 pb-[env(safe-area-inset-bottom)] pt-2">
+    <nav className="bg-white border-t border-[rgba(26,26,24,0.10)] flex justify-around items-center px-1 pb-[env(safe-area-inset-bottom)] pt-2">
       {NAV_ITEMS.map(({ to, label, icon }) => {
         const active = to === '/' ? location.pathname === '/' : location.pathname.startsWith(to)
         return (
-          <NavLink key={to} to={to} className="flex flex-col items-center gap-[3px] px-3 py-1">
+          <NavLink key={to} to={to} className="flex flex-col items-center gap-[3px] px-2 py-1">
             {icon(active)}
-            <span className={clsx('text-[10px] font-medium', active ? 'text-accent' : 'text-ink-4')}>{label}</span>
+            <span className={clsx('text-[9px] font-medium', active ? 'text-accent' : 'text-ink-4')}>{label}</span>
           </NavLink>
         )
       })}
@@ -68,7 +78,6 @@ export function BottomNav() {
   )
 }
 
-// ─── Top bar ─────────────────────────────────────────────────────────────────
 interface TopBarProps {
   title?: string
   back?: boolean
@@ -91,7 +100,6 @@ export function TopBar({ title, back, onBack, right }: TopBarProps) {
   )
 }
 
-// ─── Page wrapper ─────────────────────────────────────────────────────────────
 interface PageWrapperProps { children: React.ReactNode; className?: string }
 export function PageWrapper({ children, className }: PageWrapperProps) {
   const isOffline = useUIStore((s) => s.isOffline)
@@ -103,7 +111,6 @@ export function PageWrapper({ children, className }: PageWrapperProps) {
   )
 }
 
-// ─── App shell ────────────────────────────────────────────────────────────────
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { toasts, removeToast } = useUIStore()
   return (
@@ -112,7 +119,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {children}
       </div>
       <BottomNav />
-      {/* Toast container */}
       <div className="absolute bottom-20 left-4 right-4 space-y-2 z-50 pointer-events-none">
         {toasts.map((t) => (
           <div key={t.id} className="pointer-events-auto">
@@ -124,13 +130,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   )
 }
 
-// ─── FAB ─────────────────────────────────────────────────────────────────────
 interface FABProps { onClick: () => void; label?: string }
 export function FAB({ onClick, label }: FABProps) {
   return (
     <button
       onClick={onClick}
-      className="absolute bottom-4 right-4 w-14 h-14 bg-accent text-white rounded-[18px] flex items-center justify-center shadow-none active:scale-95 transition-transform"
+      className="absolute bottom-4 right-4 w-14 h-14 bg-accent text-white rounded-[18px] flex items-center justify-center active:scale-95 transition-transform"
       aria-label={label ?? 'Adicionar'}
     >
       <svg width="24" height="24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">

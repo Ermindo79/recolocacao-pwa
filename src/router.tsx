@@ -4,15 +4,18 @@ import { supabase } from './lib/supabase'
 import { useAuthStore } from './stores/auth.store'
 import { AppShell } from './components/layout'
 
-import LoginPage        from './pages/Login'
-import DashboardPage    from './pages/Dashboard'
-import PipelinePage     from './pages/Pipeline'
-import ContatosPage     from './pages/Contatos'
-import ContatoDetalhePage from './pages/ContatoDetalhe'
-import NarrativaPage    from './pages/Narrativa'
-import ReuniaoNovaPage  from './pages/ReuniaoNova'
+import LoginPage           from './pages/Login'
+import DashboardPage       from './pages/Dashboard'
+import PipelinePage        from './pages/Pipeline'
+import ContatosPage        from './pages/Contatos'
+import ContatoDetalhePage  from './pages/ContatoDetalhe'
+import ContatoNovoPage     from './pages/ContatoNovo'
+import ContatoEditarPage   from './pages/ContatoEditar'
+import NarrativaPage       from './pages/Narrativa'
+import ReuniaoNovaPage     from './pages/ReuniaoNova'
+import ReuniaoPrepPage     from './pages/ReuniaoPrep'
+import CalendarioPage      from './pages/Calendario'
 
-// Dev mode bypass — no Supabase configured yet
 const DEV_BYPASS = true
 
 function AuthGuard() {
@@ -50,12 +53,16 @@ const router = createBrowserRouter([
   {
     element: <AuthGuard />,
     children: [
-      { path: '/',                element: <DashboardPage /> },
-      { path: '/pipeline',        element: <PipelinePage /> },
-      { path: '/contatos',        element: <ContatosPage /> },
-      { path: '/contatos/:id',    element: <ContatoDetalhePage /> },
-      { path: '/narrativa',       element: <NarrativaPage /> },
-      { path: '/reuniao/nova',    element: <ReuniaoNovaPage /> },
+      { path: '/',                      element: <DashboardPage /> },
+      { path: '/pipeline',              element: <PipelinePage /> },
+      { path: '/contatos',              element: <ContatosPage /> },
+      { path: '/contatos/novo',         element: <ContatoNovoPage /> },
+      { path: '/contatos/:id',          element: <ContatoDetalhePage /> },
+      { path: '/contatos/:id/editar',   element: <ContatoEditarPage /> },
+      { path: '/narrativa',             element: <NarrativaPage /> },
+      { path: '/reuniao/nova',          element: <ReuniaoNovaPage /> },
+      { path: '/reuniao/prep/:id',      element: <ReuniaoPrepPage /> },
+      { path: '/calendario',            element: <CalendarioPage /> },
     ],
   },
 ])
