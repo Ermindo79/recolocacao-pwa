@@ -36,7 +36,17 @@ export default function ContatosPage() {
     <PageWrapper>
       {/* Header */}
       <div className="px-4 pt-5 pb-3 bg-white border-b border-[rgba(26,26,24,0.06)]">
-        <h1 className="text-[22px] font-medium text-ink mb-3">Contatos</h1>
+        <div className="flex items-center justify-between mb-3">
+  <h1 className="text-[22px] font-medium text-ink">Contatos</h1>
+  <button
+    onClick={() => navigate('/contatos/novo')}
+    className="w-9 h-9 bg-accent text-white rounded-xl flex items-center justify-center"
+  >
+    <svg width="18" height="18" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
+      <path d="M9 3v12M3 9h12" />
+    </svg>
+  </button>
+</div>
 
         {/* View toggle */}
         <div className="flex bg-surface-2 rounded-[10px] p-[3px] gap-[3px] mb-3">
