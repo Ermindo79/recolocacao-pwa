@@ -67,7 +67,6 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
               <p className="text-[17px] font-medium text-accent mb-1">Entrar</p>
-              <p className="text-[13px] text-ink-3">Link seguro por email. Sem senha.</p>
             </div>
 
             <div className="flex flex-col gap-1.5">
@@ -82,6 +81,15 @@ export default function LoginPage() {
               />
             </div>
 
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[12px] font-medium text-ink-3 uppercase tracking-[0.06em]">Senha</label>
+              <input
+                type="password"
+                placeholder="••••••••"
+                className="w-full h-12 rounded-xl border border-[rgba(26,26,24,0.18)] bg-[#f9fafb] px-3.5 text-[15px] text-ink placeholder:text-ink-4 outline-none focus:border-accent transition-colors"
+              />
+            </div>
+
             {error && (
               <p className="text-[12px] text-[#C0392B] bg-[#FDF0EE] px-3 py-2 rounded-lg">{error}</p>
             )}
@@ -92,7 +100,7 @@ export default function LoginPage() {
               disabled={!email}
               className="w-full"
             >
-              Enviar link de acesso
+              Entrar
             </Button>
           </form>
         ) : (
