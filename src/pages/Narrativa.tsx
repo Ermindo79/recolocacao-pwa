@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useNarrativaStore } from '../stores/narrativa.store'
 import { useUIStore } from '../stores/ui.store'
+import { useAuthStore } from '../stores/auth.store'
 import { PageWrapper } from '../components/layout'
 import { Button } from '../components/ui'
 import { formatarData, clsx } from '../utils'
@@ -8,6 +9,7 @@ import { formatarData, clsx } from '../utils'
 export default function NarrativaPage() {
   const { narrativa, updateNarrativa } = useNarrativaStore()
   const { addToast } = useUIStore()
+  const { signOut } = useAuthStore()
   const [editando, setEditando] = useState(false)
   const [draft, setDraft] = useState(narrativa ?? {})
   const [copiado, setCopiado] = useState<number | null>(null)
@@ -43,7 +45,7 @@ export default function NarrativaPage() {
     <PageWrapper>
       <div className="px-4 pt-5 pb-3 bg-white border-b border-[rgba(26,26,24,0.06)] flex items-end justify-between">
         <div>
-          <h1 className="text-[22px] font-medium text-ink">Narrativa</h1>
+          <h1 className="text-[22px] font-medium text-ink">Perfil</h1>
           <p className="text-[11px] text-ink-4 mt-0.5">
             Versão {narrativa.versao} · atualizada em {formatarData(narrativa.updated_at)}
           </p>
@@ -140,6 +142,19 @@ export default function NarrativaPage() {
             <Button variant="ghost" onClick={() => setEditando(false)}>Cancelar</Button>
           </div>
         )}
+
+        {/* Logout */}
+        {!editando && (
+          <div className="pt-4 border-t border-[rgba(26,26,24,0.08)]">
+            <button
+              onClick={signOut}
+              className="w-full text-[13px] text-ink-4 py-2 text-center hover:text-[#C0392B] transition-colors"
+            >
+              Sair da conta
+            </button>
+          </div>
+        )}
+
       </div>
     </PageWrapper>
   )

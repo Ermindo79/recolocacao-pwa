@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware'
 import type { User, Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 
-const SESSION_DURATION_MS = 4 * 60 * 60 * 1000 // 4 horas
+const SESSION_DURATION_MS = 4 * 60 * 60 * 1000 // 30 dias
 
 interface AuthState {
   user: User | null
