@@ -49,7 +49,7 @@ const NAV_ITEMS = [
     ),
   },
   {
-    to: '/narrativa', label: 'Narrativa',
+    to: '/narrativa', label: 'Perfil',
     icon: (active: boolean) => (
       <svg width="22" height="22" fill="none" stroke={active ? '#1C3D5A' : '#9A9A95'} strokeWidth="1.8" strokeLinecap="round">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />

@@ -30,35 +30,55 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-[100dvh] flex flex-col bg-surface">
-      {/* Header */}
-      <div className="bg-accent px-6 pt-16 pb-10">
-        <p className="text-[11px] font-medium tracking-[0.12em] uppercase text-white/50 mb-2">
-          Sistema operacional de
+    <div className="min-h-[100dvh] flex flex-col bg-accent">
+
+      {/* Hero */}
+      <div className="flex-1 flex flex-col items-center justify-center px-8 pb-8">
+
+        {/* Ícone */}
+        <div className="w-14 h-14 rounded-2xl border border-white/20 flex items-center justify-center mb-10">
+          <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
+            <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="rgba(255,255,255,0.7)" strokeWidth="1.5" strokeLinejoin="round"/>
+            <path d="M2 17l10 5 10-5" stroke="rgba(255,255,255,0.7)" strokeWidth="1.5" strokeLinejoin="round"/>
+            <path d="M2 12l10 5 10-5" stroke="rgba(255,255,255,0.7)" strokeWidth="1.5" strokeLinejoin="round"/>
+          </svg>
+        </div>
+
+        {/* Título com linha */}
+        <div className="flex flex-col items-center">
+          <span className="font-serif text-[38px] text-white/95 leading-[1.2] tracking-tight">
+            Catch Up
+          </span>
+          <div className="w-12 h-px bg-white/30 my-2.5" />
+          <span className="font-serif text-[38px] text-white/95 leading-[1.2] tracking-tight">
+            Executivo
+          </span>
+        </div>
+
+        <p className="text-[11px] text-white/30 tracking-[0.08em] uppercase mt-6">
+          Seu processo. Organizado.
         </p>
-        <h1 className="font-serif text-[32px] text-white/95 leading-[1.1]">
-          Transição<br />executiva.
-        </h1>
       </div>
 
-      {/* Card */}
-      <div className="flex-1 flex flex-col px-5 pt-8">
+      {/* Formulário */}
+      <div className="bg-white rounded-t-[28px] px-6 pt-8 pb-10 flex flex-col gap-4">
+
         {step === 'email' ? (
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
-              <p className="text-[17px] font-medium text-ink mb-1">Entrar</p>
-              <p className="text-[13px] text-ink-3">Você receberá um link seguro. Sem senha necessária.</p>
+              <p className="text-[17px] font-medium text-accent mb-1">Entrar</p>
+              <p className="text-[13px] text-ink-3">Link seguro por email. Sem senha.</p>
             </div>
 
-            <div>
-              <label className="text-[12px] font-medium text-ink-3 block mb-1.5">Email</label>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[12px] font-medium text-ink-3 uppercase tracking-[0.06em]">Email</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="seu@email.com"
                 autoFocus
-                className="w-full h-12 rounded-xl border border-[rgba(26,26,24,0.18)] bg-white px-3.5 text-[15px] text-ink placeholder:text-ink-4 outline-none focus:border-accent transition-colors"
+                className="w-full h-12 rounded-xl border border-[rgba(26,26,24,0.18)] bg-[#f9fafb] px-3.5 text-[15px] text-ink placeholder:text-ink-4 outline-none focus:border-accent transition-colors"
               />
             </div>
 
@@ -76,7 +96,7 @@ export default function LoginPage() {
             </Button>
           </form>
         ) : (
-          <div className="space-y-4">
+          <div className="flex flex-col gap-4">
             <div className="w-12 h-12 bg-accent-lt rounded-xl flex items-center justify-center">
               <svg width="22" height="22" fill="none" stroke="#1C3D5A" strokeWidth="1.8" strokeLinecap="round">
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
@@ -92,7 +112,7 @@ export default function LoginPage() {
             </div>
             <button
               onClick={() => setStep('email')}
-              className="text-[12px] text-ink-3 underline underline-offset-2"
+              className="text-[12px] text-ink-3 underline underline-offset-2 text-left"
             >
               Usar outro email
             </button>
@@ -101,7 +121,7 @@ export default function LoginPage() {
 
         {/* Dev bypass */}
         {import.meta.env.DEV && (
-          <div className="mt-8 pt-6 border-t border-[rgba(26,26,24,0.08)]">
+          <div className="mt-4 pt-4 border-t border-[rgba(26,26,24,0.08)]">
             <p className="text-[10px] text-ink-4 mb-2 uppercase tracking-wider">Dev mode</p>
             <Button
               variant="ghost"
@@ -112,6 +132,11 @@ export default function LoginPage() {
             </Button>
           </div>
         )}
+
+        {/* Rodapé */}
+        <div className="flex justify-center pt-2">
+          <p className="text-[11px] text-ink-4">Desenvolvido por ECN · v0.8</p>
+        </div>
       </div>
     </div>
   )

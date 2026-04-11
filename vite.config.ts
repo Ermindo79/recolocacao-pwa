@@ -9,8 +9,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icons/*.png'],
       manifest: {
-        name: 'Recolocação',
-        short_name: 'Recolocação',
+       name: 'Catch Up Executivo',
+       short_name: 'Catchup Exec',
         description: 'Sistema operacional de transição executiva',
         theme_color: '#1C3D5A',
         background_color: '#FAFAF8',

@@ -12,7 +12,12 @@ export const KEYS = {
 }
 
 export function useDashboard() {
-  return useQuery({ queryKey: KEYS.dashboard, queryFn: dashboardService.get, staleTime: 1000 * 60 * 2 })
+  return useQuery({ 
+    queryKey: KEYS.dashboard, 
+    queryFn: dashboardService.get, 
+    staleTime: 1000 * 60 * 2,
+    retry: false
+  })
 }
 
 export function useContatos() {

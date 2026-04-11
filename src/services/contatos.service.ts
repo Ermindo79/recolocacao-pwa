@@ -2,14 +2,14 @@ import { supabase } from '../lib/supabase'
 import type { Contato } from '../types'
 import { MOCK_CONTATOS } from '../data/mock'
 
-const USE_MOCK = !import.meta.env.VITE_SUPABASE_URL
+const USE_MOCK = false
 
 export const contatosService = {
   async getAll(): Promise<Contato[]> {
     if (USE_MOCK) return MOCK_CONTATOS.filter((c) => !c.arquivado)
     const { data, error } = await supabase
       .from('v_contatos_calor')
-      .select('*, empresa:empresas(*), ponte_contato:contatos!ponte_contato_id(id,nome)')
+      .select('*')
       .eq('arquivado', false)
       .order('dias_sem_contato', { ascending: false })
     if (error) throw error
@@ -24,7 +24,7 @@ export const contatosService = {
     }
     const { data, error } = await supabase
       .from('v_contatos_calor')
-      .select('*, empresa:empresas(*), ponte_contato:contatos!ponte_contato_id(id,nome)')
+      .select('*')
       .eq('id', id)
       .single()
     if (error) throw error

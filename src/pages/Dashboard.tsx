@@ -41,11 +41,11 @@ export default function DashboardPage() {
         <div>
           <SectionHeader label="Esta semana" />
           {isLoading ? (
-            <div className="grid grid-cols-4 gap-2">
-              {[...Array(4)].map((_, i) => <MetricCardSkeleton key={i} />)}
+            <div className="grid grid-cols-3 gap-2">
+              {[...Array(3)].map((_, i) => <MetricCardSkeleton key={i} />)}
             </div>
           ) : error ? null : data ? (
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <MetricCard
                 value={data.metricas.contatos_ativos}
                 label="Contatos"
@@ -58,10 +58,6 @@ export default function DashboardPage() {
                 value={data.metricas.followups_pendentes}
                 label="Follow-ups"
                 alert={data.metricas.followups_pendentes > 0}
-              />
-              <MetricCard
-                value={data.metricas.dias_em_processo}
-                label="Dias"
               />
             </div>
           ) : null}

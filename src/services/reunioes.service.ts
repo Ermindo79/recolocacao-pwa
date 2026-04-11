@@ -2,7 +2,7 @@ import { supabase } from '../lib/supabase'
 import type { Reuniao } from '../types'
 import { MOCK_REUNIOES } from '../data/mock'
 
-const USE_MOCK = !import.meta.env.VITE_SUPABASE_URL
+const USE_MOCK = false
 
 export const reunioesService = {
   async getByContato(contatoId: string): Promise<Reuniao[]> {
