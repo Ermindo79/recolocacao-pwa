@@ -37,6 +37,14 @@ export default function NarrativaPage() {
         <p className="text-[15px] font-medium text-ink mb-1">Narrativa ainda não definida.</p>
         <p className="text-[12px] text-ink-3 mb-4">Preencha agora — ela guia todas as conversas.</p>
         <Button onClick={handleEditar}>Definir narrativa</Button>
+        <div className="pt-8 mt-8 border-t border-[rgba(26,26,24,0.08)]">
+          <button
+            onClick={signOut}
+            className="w-full text-[13px] text-ink-4 py-2 text-center"
+          >
+            Sair da conta
+          </button>
+        </div>
       </div>
     </PageWrapper>
   )
@@ -57,7 +65,6 @@ export default function NarrativaPage() {
 
       <div className="px-4 py-4 space-y-3 pb-24">
 
-        {/* Posicionamento */}
         <Section label="Posicionamento">
           {editando ? (
             <textarea
@@ -71,7 +78,6 @@ export default function NarrativaPage() {
           )}
         </Section>
 
-        {/* Narrativa de saída */}
         <Section label="Narrativa de saída">
           {editando ? (
             <textarea
@@ -85,7 +91,6 @@ export default function NarrativaPage() {
           )}
         </Section>
 
-        {/* Contextos */}
         <Section label="Contextos preferidos">
           <div className="flex gap-2 flex-wrap">
             {narrativa.contextos.map((c, i) => (
@@ -96,7 +101,6 @@ export default function NarrativaPage() {
           </div>
         </Section>
 
-        {/* Setores */}
         <Section label="Setores-alvo">
           <div className="flex gap-2 flex-wrap">
             {narrativa.setores.map((s, i) => (
@@ -107,7 +111,6 @@ export default function NarrativaPage() {
           </div>
         </Section>
 
-        {/* Frases aprovadas */}
         <Section label="Frases aprovadas — toque para copiar">
           <div className="space-y-2">
             {narrativa.frases_aprovadas.map((frase, idx) => (
@@ -135,7 +138,6 @@ export default function NarrativaPage() {
           </div>
         </Section>
 
-        {/* Salvar */}
         {editando && (
           <div className="flex gap-2 pt-2">
             <Button onClick={handleSalvar} className="flex-1">Salvar narrativa</Button>
@@ -143,7 +145,6 @@ export default function NarrativaPage() {
           </div>
         )}
 
-        {/* Logout */}
         {!editando && (
           <div className="pt-4 border-t border-[rgba(26,26,24,0.08)]">
             <button
