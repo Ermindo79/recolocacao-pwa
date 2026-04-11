@@ -1,72 +1,95 @@
 import React, { useEffect } from 'react'
-import { createBrowserRouter, RouterProvider, Navigate, Outlet } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { supabase } from './lib/supabase'
 import { useAuthStore } from './stores/auth.store'
 import { AppShell } from './components/layout'
 
-import LoginPage           from './pages/Login'
-import DashboardPage       from './pages/Dashboard'
-import PipelinePage        from './pages/Pipeline'
-import ContatosPage        from './pages/Contatos'
-import ContatoDetalhePage  from './pages/ContatoDetalhe'
-import ContatoNovoPage     from './pages/ContatoNovo'
-import ContatoEditarPage   from './pages/ContatoEditar'
-import NarrativaPage       from './pages/Narrativa'
-import ReuniaoNovaPage     from './pages/ReuniaoNova'
-import ReuniaoPrepPage     from './pages/ReuniaoPrep'
-import CalendarioPage      from './pages/Calendario'
+import LoginPage from './pages/Login'
+import DashboardPage from './pages/Dashboard'
+import PipelinePage from './pages/Pipeline'
+import ContatosPage from './pages/Contatos'
+import ContatoDetalhePage from './pages/ContatoDetalhe'
+import ContatoNovoPage from './pages/ContatoNovo'
+import ReuniaoNovaPage from './pages/ReuniaoNova'
+import NarrativaPage from './pages/Narrativa'
+import CalendarioPage from './pages/Calendario'
+import ReuniaoPage from './pages/ReuniaoPrep'
 
-const DEV_BYPASS = true
+const DEV_BYPASS = false
 
-function AuthGuard() {
-  const { user, isLoading, setSession, setLoading } = useAuthStore()
+function AuthGuard({ children }: { children: React.ReactNode }) {
+  const { user, isLoading, isSessionExpired, signOut } = useAuthStore()
+  const navigate = useNavigate()
 
   useEffect(() => {
-    if (DEV_BYPASS) { setLoading(false); return }
+    if (!isLoading && user && isSessionExpired()) {
+      signOut()
+      navigate('/login')
+    }
+  }, [user, isLoading, isSessionExpired, signOut, navigate])
+
+  if (isLoading) {
+    return (
+      <div className="min-h-[100dvh] flex items-center justify-center bg-surface">
+        <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  if (!DEV_BYPASS && !user) {
+    return <Navigate to="/login" replace />
+  }
+
+  return <>{children}</>
+}
+
+function AuthListener() {
+  const { setSession, setLoading } = useAuthStore()
+
+  useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       setLoading(false)
     })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
+      setLoading(false)
     })
+
     return () => subscription.unsubscribe()
   }, [setSession, setLoading])
 
-  if (isLoading) return (
-    <div className="flex items-center justify-center h-[100dvh] bg-surface">
-      <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-    </div>
-  )
-
-  if (!DEV_BYPASS && !user) return <Navigate to="/login" replace />
-
-  return (
-    <AppShell>
-      <Outlet />
-    </AppShell>
-  )
+  return null
 }
 
-const router = createBrowserRouter([
-  { path: '/login', element: <LoginPage /> },
-  {
-    element: <AuthGuard />,
-    children: [
-      { path: '/',                      element: <DashboardPage /> },
-      { path: '/pipeline',              element: <PipelinePage /> },
-      { path: '/contatos',              element: <ContatosPage /> },
-      { path: '/contatos/novo',         element: <ContatoNovoPage /> },
-      { path: '/contatos/:id',          element: <ContatoDetalhePage /> },
-      { path: '/contatos/:id/editar',   element: <ContatoEditarPage /> },
-      { path: '/narrativa',             element: <NarrativaPage /> },
-      { path: '/reuniao/nova',          element: <ReuniaoNovaPage /> },
-      { path: '/reuniao/prep/:id',      element: <ReuniaoPrepPage /> },
-      { path: '/calendario',            element: <CalendarioPage /> },
-    ],
-  },
-])
-
 export default function Router() {
-  return <RouterProvider router={router} />
+  return (
+    <BrowserRouter>
+      <AuthListener />
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/*"
+          element={
+            <AuthGuard>
+              <AppShell>
+                <Routes>
+                  <Route path="/" element={<DashboardPage />} />
+                  <Route path="/pipeline" element={<PipelinePage />} />
+                  <Route path="/contatos" element={<ContatosPage />} />
+                  <Route path="/contatos/novo" element={<ContatoNovoPage />} />
+                  <Route path="/contatos/:id" element={<ContatoDetalhePage />} />
+                  <Route path="/reuniao/nova" element={<ReuniaoNovaPage />} />
+                  <Route path="/reuniao/prep/:id" element={<ReuniaoPage />} />
+                  <Route path="/narrativa" element={<NarrativaPage />} />
+                  <Route path="/calendario" element={<CalendarioPage />} />
+                </Routes>
+              </AppShell>
+            </AuthGuard>
+          }
+        />
+      </Routes>
+    </BrowserRouter>
+  )
 }
