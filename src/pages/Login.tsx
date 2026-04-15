@@ -7,7 +7,7 @@ type LoginStep = 'email' | 'otp'
 export default function LoginPage() {
   const [step, setStep] = useState<LoginStep>('email')
   const [email, setEmail] = useState('')
-  const [otp, setOtp] = useState(['', '', '', '', '', ''])
+  const [otp, setOtp] = useState(["", "", "", "", "", "", "", ""])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
@@ -34,7 +34,7 @@ export default function LoginPage() {
   async function handleSubmitOtp(e: React.FormEvent) {
     e.preventDefault()
     const token = otp.join('')
-    if (token.length !== 6) return
+    if (token.length !== 8) return
     setLoading(true)
     setError('')
     try {
@@ -56,7 +56,7 @@ export default function LoginPage() {
       // Colar código completo
       const digits = value.replace(/\D/g, '').slice(0, 6).split('')
       const newOtp = [...otp]
-      digits.forEach((d, i) => { if (i < 6) newOtp[i] = d })
+      digits.forEach((d, i) => { if (i < 8) newOtp[i] = d })
       setOtp(newOtp)
       inputRefs.current[Math.min(digits.length, 5)]?.focus()
       return
@@ -64,7 +64,7 @@ export default function LoginPage() {
     const newOtp = [...otp]
     newOtp[index] = value.replace(/\D/g, '')
     setOtp(newOtp)
-    if (value && index < 5) {
+    if (value && index < 7) {
       inputRefs.current[index + 1]?.focus()
     }
   }
@@ -171,13 +171,13 @@ export default function LoginPage() {
               <p className="text-[12px] text-[#C0392B] bg-[#FDF0EE] px-3 py-2 rounded-lg">{error}</p>
             )}
 
-            <Button type="submit" loading={loading} disabled={otp.join('').length !== 6} className="w-full">
+            <Button type="submit" loading={loading} disabled={otp.join('').length !== 8} className="w-full">
               Confirmar
             </Button>
 
             <button
               type="button"
-              onClick={() => { setStep('email'); setOtp(['', '', '', '', '', '']); setError('') }}
+              onClick={() => { setStep('email'); setOtp(["", "", "", "", "", "", "", ""]); setError('') }}
               className="text-[12px] text-ink-3 underline underline-offset-2 text-center"
             >
               Usar outro email
