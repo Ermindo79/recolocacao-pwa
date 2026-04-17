@@ -17,15 +17,29 @@ export default function LoginPage() {
     if (!email) return
     setLoading(true)
     setError('')
+
+    const timeout = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Tempo esgotado. Tente novamente.')), 10000)
+    )
+
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: { shouldCreateUser: true },
-      })
-      if (error) throw error
+      const result = await Promise.race([
+        supabase.auth.signInWithOtp({
+          email,
+          options: { shouldCreateUser: true },
+        }),
+        timeout,
+      ]) as { error: Error | null }
+
+      if (result.error) throw result.error
       setStep('otp')
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Erro ao enviar código. Tente novamente.')
+      const msg = err instanceof Error ? err.message : 'Erro ao enviar código.'
+      if (msg.includes('rate') || msg.includes('limit')) {
+        setError('Muitas tentativas. Aguarde alguns minutos e tente novamente.')
+      } else {
+        setError(msg)
+      }
     } finally {
       setLoading(false)
     }
@@ -53,12 +67,11 @@ export default function LoginPage() {
 
   function handleOtpChange(index: number, value: string) {
     if (value.length > 1) {
-      // Colar código completo
-      const digits = value.replace(/\D/g, '').slice(0, 6).split('')
+      const digits = value.replace(/\D/g, '').slice(0, 8).split('')
       const newOtp = [...otp]
       digits.forEach((d, i) => { if (i < 8) newOtp[i] = d })
       setOtp(newOtp)
-      inputRefs.current[Math.min(digits.length, 5)]?.focus()
+      inputRefs.current[Math.min(digits.length, 7)]?.focus()
       return
     }
     const newOtp = [...otp]
@@ -78,7 +91,6 @@ export default function LoginPage() {
   return (
     <div className="min-h-[100dvh] flex flex-col bg-accent">
 
-      {/* Hero */}
       <div className="flex-1 flex flex-col items-center justify-center px-8 pb-8">
         <div className="w-14 h-14 rounded-2xl border border-white/20 flex items-center justify-center mb-10">
           <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
@@ -89,13 +101,9 @@ export default function LoginPage() {
         </div>
 
         <div className="flex flex-col items-center">
-          <span className="font-serif text-[38px] text-white/95 leading-[1.2] tracking-tight">
-            Catch Up
-          </span>
+          <span className="font-serif text-[38px] text-white/95 leading-[1.2] tracking-tight">Catch Up</span>
           <div className="w-12 h-px bg-white/30 my-2.5" />
-          <span className="font-serif text-[38px] text-white/95 leading-[1.2] tracking-tight">
-            Executivo
-          </span>
+          <span className="font-serif text-[38px] text-white/95 leading-[1.2] tracking-tight">Executivo</span>
         </div>
 
         <p className="text-[11px] text-white/30 tracking-[0.08em] uppercase mt-6">
@@ -103,14 +111,11 @@ export default function LoginPage() {
         </p>
       </div>
 
-      {/* Formulário */}
       <div className="bg-white rounded-t-[28px] px-6 pt-8 pb-10 flex flex-col gap-4">
 
         {step === 'email' ? (
           <form onSubmit={handleSubmitEmail} className="flex flex-col gap-4">
-            <div>
-              <p className="text-[17px] font-medium text-accent mb-1">Entrar</p>
-            </div>
+            <p className="text-[17px] font-medium text-accent">Entrar</p>
 
             <div className="flex flex-col gap-1.5">
               <label className="text-[12px] font-medium text-ink-3 uppercase tracking-[0.06em]">Email</label>
@@ -158,11 +163,11 @@ export default function LoginPage() {
                   ref={(el) => { inputRefs.current[i] = el }}
                   type="text"
                   inputMode="numeric"
-                  maxLength={6}
+                  maxLength={1}
                   value={digit}
                   onChange={(e) => handleOtpChange(i, e.target.value)}
                   onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                  className="w-12 h-14 rounded-xl border border-[rgba(26,26,24,0.18)] bg-[#f9fafb] text-center text-[22px] font-medium text-accent outline-none focus:border-accent transition-colors"
+                  className="w-10 h-14 rounded-xl border border-[rgba(26,26,24,0.18)] bg-[#f9fafb] text-center text-[22px] font-medium text-accent outline-none focus:border-accent transition-colors"
                 />
               ))}
             </div>
@@ -185,7 +190,6 @@ export default function LoginPage() {
           </form>
         )}
 
-        {/* Dev bypass */}
         {import.meta.env.DEV && (
           <div className="mt-4 pt-4 border-t border-[rgba(26,26,24,0.08)]">
             <p className="text-[10px] text-ink-4 mb-2 uppercase tracking-wider">Dev mode</p>
