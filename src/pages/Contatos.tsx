@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useContatos } from '../hooks'
 import { PageWrapper, FAB } from '../components/layout'
-import { ContactCardSkeleton, ErrorState, EmptyState, SectionHeader, Avatar, CalorBadge, Badge } from '../components/ui'
+import { ContactCardSkeleton, ErrorState, EmptyState, SectionHeader, Avatar, CalorBadge } from '../components/ui'
 import { ContatoCard } from '../components/contato/ContatoCard'
 import { ordenarPorUrgencia, clsx } from '../utils'
 import type { Contato, ContactType } from '../types'
@@ -10,9 +10,10 @@ import type { Contato, ContactType } from '../types'
 type ViewMode = 'pessoas' | 'categorias'
 
 const CATEGORIAS: { key: ContactType; label: string }[] = [
-  { key: 'headhunter', label: 'Headhunters' },
-  { key: 'consultoria', label: 'Consultorias' },
   { key: 'empresa', label: 'Empresas' },
+  { key: 'consultoria_estrategia', label: 'Consultorias de Estratégia' },
+  { key: 'conselho', label: 'Membros de Conselho de Administração' },
+  { key: 'headhunter', label: 'Headhunter' },
 ]
 
 export default function ContatosPage() {
@@ -34,21 +35,19 @@ export default function ContatosPage() {
 
   return (
     <PageWrapper>
-      {/* Header */}
       <div className="px-4 pt-5 pb-3 bg-white border-b border-[rgba(26,26,24,0.06)]">
         <div className="flex items-center justify-between mb-3">
-  <h1 className="text-[22px] font-medium text-ink">Contatos</h1>
-  <button
-    onClick={() => navigate('/contatos/novo')}
-    className="w-9 h-9 bg-accent text-white rounded-xl flex items-center justify-center"
-  >
-    <svg width="18" height="18" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
-      <path d="M9 3v12M3 9h12" />
-    </svg>
-  </button>
-</div>
+          <h1 className="text-[22px] font-medium text-ink">Contatos</h1>
+          <button
+            onClick={() => navigate('/contatos/novo')}
+            className="w-9 h-9 bg-accent text-white rounded-xl flex items-center justify-center"
+          >
+            <svg width="18" height="18" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
+              <path d="M9 3v12M3 9h12" />
+            </svg>
+          </button>
+        </div>
 
-        {/* View toggle */}
         <div className="flex bg-surface-2 rounded-[10px] p-[3px] gap-[3px] mb-3">
           {(['pessoas', 'categorias'] as ViewMode[]).map((v) => (
             <button
@@ -66,7 +65,6 @@ export default function ContatosPage() {
           ))}
         </div>
 
-        {/* Search */}
         <div className="flex items-center gap-2 bg-white border border-[rgba(26,26,24,0.18)] rounded-xl px-3 h-[38px]">
           <svg width="14" height="14" fill="none" stroke="#9A9A95" strokeWidth="1.8">
             <circle cx="6" cy="6" r="5" /><path d="m11 11-3-3" />
@@ -100,7 +98,6 @@ export default function ContatosPage() {
   )
 }
 
-// ─── View por pessoa ──────────────────────────────────────────────────────────
 function ViewPessoas({ contatos, search, onNavigate }: {
   contatos: Contato[]; search: string; onNavigate: (p: string) => void
 }) {
@@ -110,10 +107,7 @@ function ViewPessoas({ contatos, search, onNavigate }: {
         title={`Nenhum resultado para "${search}"`}
         subtitle="Adicionar como novo contato?"
         action={
-          <button
-            onClick={() => onNavigate('/contatos/novo')}
-            className="text-[13px] font-medium text-accent underline underline-offset-2"
-          >
+          <button onClick={() => onNavigate('/contatos/novo')} className="text-[13px] font-medium text-accent underline underline-offset-2">
             Adicionar contato →
           </button>
         }
@@ -123,25 +117,16 @@ function ViewPessoas({ contatos, search, onNavigate }: {
         title="Nenhum contato ainda."
         subtitle="Adicione o primeiro headhunter para começar."
         action={
-          <button
-            onClick={() => onNavigate('/contatos/novo')}
-            className="text-[13px] font-medium text-accent underline underline-offset-2"
-          >
+          <button onClick={() => onNavigate('/contatos/novo')} className="text-[13px] font-medium text-accent underline underline-offset-2">
             Adicionar primeiro contato →
           </button>
         }
       />
     )
   }
-
-  return (
-    <div className="space-y-2">
-      {contatos.map((c) => <ContatoCard key={c.id} contato={c} />)}
-    </div>
-  )
+  return <div className="space-y-2">{contatos.map((c) => <ContatoCard key={c.id} contato={c} />)}</div>
 }
 
-// ─── View por categoria ───────────────────────────────────────────────────────
 function ViewCategorias({ contatos, onNavigate }: { contatos: Contato[]; onNavigate: (p: string) => void }) {
   const [expandedEmpresa, setExpandedEmpresa] = useState<string | null>(null)
 
@@ -154,7 +139,6 @@ function ViewCategorias({ contatos, onNavigate }: { contatos: Contato[]; onNavig
         return (
           <div key={key}>
             <SectionHeader label={`${label} · ${grupo.length}`} />
-
             {key === 'empresa' ? (
               <EmpresasGroup
                 contatos={grupo}
@@ -164,9 +148,7 @@ function ViewCategorias({ contatos, onNavigate }: { contatos: Contato[]; onNavig
               />
             ) : (
               <div className="space-y-2">
-                {grupo.map((c) => (
-                  <ContatoCard key={c.id} contato={c} />
-                ))}
+                {grupo.map((c) => <ContatoCard key={c.id} contato={c} />)}
               </div>
             )}
           </div>
@@ -176,7 +158,6 @@ function ViewCategorias({ contatos, onNavigate }: { contatos: Contato[]; onNavig
   )
 }
 
-// ─── Empresas group ───────────────────────────────────────────────────────────
 function EmpresasGroup({ contatos, expanded, onToggle, onNavigate }: {
   contatos: Contato[]
   expanded: string | null
@@ -199,7 +180,6 @@ function EmpresasGroup({ contatos, expanded, onToggle, onNavigate }: {
         const isOpen = expanded === empresa
         return (
           <div key={empresa} className="bg-white border border-[rgba(26,26,24,0.10)] rounded-xl overflow-hidden">
-            {/* Empresa header */}
             <button
               onClick={() => onToggle(isOpen ? null : empresa)}
               className="w-full flex items-center justify-between px-3.5 py-3 active:bg-surface text-left"
@@ -212,32 +192,23 @@ function EmpresasGroup({ contatos, expanded, onToggle, onNavigate }: {
                 <span className="text-[10px] font-medium bg-accent-lt text-accent px-2 py-0.5 rounded-full">
                   {pessoas.length} {pessoas.length === 1 ? 'pessoa' : 'pessoas'}
                 </span>
-                <svg
-                  width="14" height="14" fill="none"
-                  stroke="#9A9A95" strokeWidth="1.8" strokeLinecap="round"
-                  className={clsx('transition-transform', isOpen ? 'rotate-180' : '')}
-                >
+                <svg width="14" height="14" fill="none" stroke="#9A9A95" strokeWidth="1.8" strokeLinecap="round"
+                  className={clsx('transition-transform', isOpen ? 'rotate-180' : '')}>
                   <path d="m3 6 5 5 5-5" />
                 </svg>
               </div>
             </button>
-
-            {/* Pessoas da empresa */}
             {isOpen && (
               <div className="border-t border-[rgba(26,26,24,0.08)] px-3.5 py-1">
                 {pessoas.map((c) => (
-                  <button
-                    key={c.id}
-                    onClick={() => onNavigate(`/contatos/${c.id}`)}
+                  <button key={c.id} onClick={() => onNavigate(`/contatos/${c.id}`)}
                     className="w-full flex items-center gap-3 py-2.5 border-b border-[rgba(26,26,24,0.06)] last:border-0 active:opacity-70"
                   >
                     <Avatar nome={c.nome} size="sm" />
                     <div className="flex-1 min-w-0 text-left">
                       <p className="text-[12px] font-medium text-ink truncate">{c.nome}</p>
                       <p className="text-[10px] text-ink-3 mt-0.5">
-                        {c.contato_primario
-                          ? 'Primário'
-                          : `via ${c.ponte_contato?.nome ?? '—'}`}
+                        {c.contato_primario ? 'Primário' : `via ${c.ponte_contato?.nome ?? '—'}`}
                       </p>
                     </div>
                     <CalorBadge calor={c.calor ?? 'sem_contato'} />

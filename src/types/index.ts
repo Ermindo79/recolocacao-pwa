@@ -1,4 +1,4 @@
-export type ContactType = 'headhunter' | 'consultoria' | 'empresa'
+export type ContactType = 'empresa' | 'consultoria_estrategia' | 'conselho' | 'headhunter'
 export type ContactHeat = 'quente' | 'morno' | 'frio' | 'sem_contato' | 'agendado'
 export type MeetingFormat = 'ligacao' | 'cafe' | 'video' | 'mensagem' | 'presencial'
 export type MeetingTone = 'muito_positivo' | 'aberto' | 'neutro' | 'frio'

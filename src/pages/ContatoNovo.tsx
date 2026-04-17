@@ -8,9 +8,10 @@ import { clsx } from '../utils'
 import type { ContactType } from '../types'
 
 const TIPOS: { value: ContactType; label: string }[] = [
+  { value: 'empresa', label: 'Empresas' },
+  { value: 'consultoria_estrategia', label: 'Consultorias de Estratégia' },
+  { value: 'conselho', label: 'Membros de Conselho' },
   { value: 'headhunter', label: 'Headhunter' },
-  { value: 'consultoria', label: 'Consultoria' },
-  { value: 'empresa', label: 'Empresa' },
 ]
 
 const CANAIS = ['whatsapp', 'linkedin', 'email', 'telefone']
@@ -23,7 +24,7 @@ export default function ContatoNovoPage() {
   const [nome, setNome] = useState('')
   const [empresa, setEmpresa] = useState('')
   const [cargo, setCargo] = useState('')
-  const [tipo, setTipo] = useState<ContactType>('headhunter')
+  const [tipo, setTipo] = useState<ContactType>('empresa')
   const [canal, setCanal] = useState('whatsapp')
   const [primario, setPrimario] = useState(true)
   const [ponteId, setPonteId] = useState('')
@@ -69,13 +70,13 @@ export default function ContatoNovoPage() {
         {/* Tipo */}
         <div>
           <label className="text-[12px] font-medium text-ink-3 block mb-1.5">Categoria</label>
-          <div className="flex gap-2">
+          <div className="grid grid-cols-2 gap-2">
             {TIPOS.map(({ value, label }) => (
               <button
                 key={value}
                 onClick={() => setTipo(value)}
                 className={clsx(
-                  'flex-1 py-2.5 rounded-xl text-[12px] font-medium border transition-all',
+                  'py-2.5 rounded-xl text-[12px] font-medium border transition-all',
                   tipo === value
                     ? 'bg-accent text-white border-accent'
                     : 'bg-white text-ink-2 border-[rgba(26,26,24,0.18)]'

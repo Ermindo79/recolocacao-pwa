@@ -10,6 +10,24 @@ interface ContatoCardProps {
   compact?: boolean
 }
 
+function getSubtexto(contato: Contato): string {
+  const ponte = !contato.contato_primario && contato.ponte_contato
+    ? ` · via ${contato.ponte_contato.nome.split(' ')[0]}`
+    : ''
+
+  if (contato.tipo === 'empresa') {
+    return `${contato.empresa_nome ?? ''}${ponte}`
+  }
+  if (contato.tipo === 'headhunter') {
+    return `Headhunter · ${contato.empresa_nome ?? ''}${ponte}`
+  }
+  if (contato.tipo === 'conselho') {
+    return `Independent${ponte}`
+  }
+  // consultoria_estrategia
+  return `${contato.empresa_nome ?? ''}${ponte}`
+}
+
 export function ContatoCard({ contato, showPrioridade = true, compact = false }: ContatoCardProps) {
   const navigate = useNavigate()
   const vencido = contato.followup_vencido
@@ -32,12 +50,7 @@ export function ContatoCard({ contato, showPrioridade = true, compact = false }:
           {contato.nome}
         </p>
         <p className="text-[11px] text-ink-3 truncate">
-          {contato.tipo === 'empresa' && contato.empresa_nome
-            ? `${contato.empresa_nome}`
-            : `${contato.tipo === 'headhunter' ? 'Headhunter' : 'Consultoria'} · ${contato.empresa_nome ?? ''}`}
-          {!contato.contato_primario && contato.ponte_contato
-            ? ` · via ${contato.ponte_contato.nome.split(' ')[0]}`
-            : ''}
+          {getSubtexto(contato)}
         </p>
       </div>
 
