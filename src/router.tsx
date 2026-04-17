@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { supabase } from './lib/supabase'
 import { useAuthStore } from './stores/auth.store'
 import { AppShell } from './components/layout'
@@ -15,18 +15,8 @@ import NarrativaPage from './pages/Narrativa'
 import CalendarioPage from './pages/Calendario'
 import ReuniaoPage from './pages/ReuniaoPrep'
 
-const DEV_BYPASS = false 
-
 function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { user, isLoading, isSessionExpired, signOut } = useAuthStore()
-  const navigate = useNavigate()
-
-  useEffect(() => {
-    if (!isLoading && user && isSessionExpired()) {
-      signOut()
-      navigate('/login')
-    }
-  }, [user, isLoading, isSessionExpired, signOut, navigate])
+  const { user, isLoading } = useAuthStore()
 
   if (isLoading) {
     return (
@@ -36,7 +26,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     )
   }
 
-  if (!DEV_BYPASS && !user) {
+  if (!user) {
     return <Navigate to="/login" replace />
   }
 
