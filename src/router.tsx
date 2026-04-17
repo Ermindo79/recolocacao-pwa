@@ -15,7 +15,7 @@ import NarrativaPage from './pages/Narrativa'
 import CalendarioPage from './pages/Calendario'
 import ReuniaoPage from './pages/ReuniaoPrep'
 
-const DEV_BYPASS = false
+const DEV_BYPASS = false 
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, isLoading, isSessionExpired, signOut } = useAuthStore()
