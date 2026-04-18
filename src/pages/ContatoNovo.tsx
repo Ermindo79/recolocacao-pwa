@@ -6,6 +6,7 @@ import { Button } from '../components/ui'
 import { useUIStore } from '../stores/ui.store'
 import { clsx } from '../utils'
 import type { ContactType } from '../types'
+import { contatosService } from '../services/contatos.service'
 
 const TIPOS: { value: ContactType; label: string }[] = [
   { value: 'empresa', label: 'Empresas' },
@@ -19,7 +20,7 @@ const CANAIS = ['whatsapp', 'linkedin', 'email', 'telefone']
 export default function ContatoNovoPage() {
   const navigate = useNavigate()
   const { addToast } = useUIStore()
-  const { data: contatos = [] } = useContatos()
+  const { data: contatos = [], refetch } = useContatos()
 
   const [nome, setNome] = useState('')
   const [empresa, setEmpresa] = useState('')
@@ -37,7 +38,20 @@ export default function ContatoNovoPage() {
     if (!canSave) return
     setSaving(true)
     try {
-      await new Promise(r => setTimeout(r, 400))
+      await contatosService.create({
+        nome: nome.trim(),
+        empresa_nome: empresa.trim() || undefined,
+        cargo: cargo.trim() || undefined,
+        tipo,
+        canal,
+        contato_primario: primario,
+        ponte_contato_id: !primario && ponteId ? ponteId : undefined,
+        notas: notas.trim() || undefined,
+        pipeline_stage: 'mapeado',
+        stage_updated_at: new Date().toISOString(),
+        arquivado: false,
+      })
+      await refetch()
       addToast(`${nome} adicionado com sucesso.`)
       navigate('/contatos')
     } catch {
@@ -165,7 +179,7 @@ export default function ContatoNovoPage() {
           </p>
         </div>
 
-        {/* Ponte — só aparece se secundário */}
+        {/* Ponte */}
         {!primario && (
           <div>
             <label className="text-[12px] font-medium text-ink-3 block mb-1.5">
@@ -209,7 +223,6 @@ export default function ContatoNovoPage() {
         )}
       </div>
 
-      {/* Footer */}
       <div className="px-4 py-3 bg-white border-t border-[rgba(26,26,24,0.08)] pb-[env(safe-area-inset-bottom)]">
         <Button onClick={handleSave} disabled={!canSave} loading={saving} className="w-full">
           Adicionar contato
