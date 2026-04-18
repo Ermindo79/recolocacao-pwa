@@ -15,10 +15,12 @@ import NarrativaPage from './pages/Narrativa'
 import CalendarioPage from './pages/Calendario'
 import ReuniaoPage from './pages/ReuniaoPrep'
 
+const DEV_BYPASS = false
+
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuthStore()
 
-  if (isLoading) {
+  if (isLoading && !DEV_BYPASS) {
     return (
       <div className="min-h-[100dvh] flex items-center justify-center bg-surface">
         <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
@@ -26,7 +28,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     )
   }
 
-  if (!user) {
+  if (!DEV_BYPASS && !user) {
     return <Navigate to="/login" replace />
   }
 
@@ -42,9 +44,11 @@ function AuthListener() {
       setLoading(false)
     })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session)
-      setLoading(false)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        setSession(session)
+        setLoading(false)
+      }
     })
 
     return () => subscription.unsubscribe()
