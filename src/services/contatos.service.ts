@@ -9,7 +9,7 @@ export const contatosService = {
     if (USE_MOCK) return MOCK_CONTATOS.filter((c) => !c.arquivado)
     const { data, error } = await supabase
       .from('v_contatos_calor')
-      .select('*')
+      .select('*, ponte_contato:contatos!ponte_contato_id(id, nome)')
       .eq('arquivado', false)
       .order('dias_sem_contato', { ascending: false })
     if (error) throw error
@@ -24,7 +24,7 @@ export const contatosService = {
     }
     const { data, error } = await supabase
       .from('v_contatos_calor')
-      .select('*')
+      .select('*, ponte_contato:contatos!ponte_contato_id(id, nome)')
       .eq('id', id)
       .single()
     if (error) throw error
