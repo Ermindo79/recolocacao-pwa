@@ -1,6 +1,6 @@
 import React from 'react'
 import { clsx } from '../../utils'
-import type { ContactHeat } from '../../types'
+import type { ContactHeat, PipelineStage } from '../../types'
 import { CALOR_CONFIG, TIPO_CONFIG, iniciais } from '../../utils'
 
 // ─── Badge ───────────────────────────────────────────────────────────────────
@@ -28,22 +28,59 @@ export function PrimarioBadge({ primario, ponteNome }: { primario: boolean; pont
   return <Badge label={`via ${ponteNome ?? '—'}`} className="bg-surface-2 text-ink-3" />
 }
 
-// ─── Avatar ──────────────────────────────────────────────────────────────────
-const AVATAR_COLORS = [
-  'bg-accent-lt text-accent',
-  'bg-warm-lt text-warm',
-  'bg-[#EBF5F0] text-[#1A6B45]',
-  'bg-surface-2 text-ink-3',
-]
+// ─── Avatar color logic ───────────────────────────────────────────────────────
+function getAvatarColor(calor?: ContactHeat, pipeline?: PipelineStage): string {
+  // Pipeline rules first
+  if (pipeline === 'oportunidade' || pipeline === 'reuniao') return 'bg-[#EBF5F0] text-[#1A6B45]'
+  if (pipeline === 'arquivado' || pipeline === 'mapeado') return 'bg-surface-2 text-ink-3'
 
-interface AvatarProps { nome: string; size?: 'sm' | 'md' | 'lg' }
-export function Avatar({ nome, size = 'md' }: AvatarProps) {
-  const idx = nome.charCodeAt(0) % AVATAR_COLORS.length
+  // Followup rules
+  if (pipeline === 'followup') {
+    if (calor === 'agendado' || calor === 'quente') return 'bg-[#EBF5F0] text-[#1A6B45]'
+    if (calor === 'morno') return 'bg-accent-lt text-accent'
+    if (calor === 'frio') return 'bg-warm-lt text-warm'
+    return 'bg-surface-2 text-ink-3'
+  }
+
+  // Acionado rules
+  if (pipeline === 'acionado') {
+    if (calor === 'agendado' || calor === 'quente' || calor === 'morno') return 'bg-warm-lt text-warm'
+    return 'bg-surface-2 text-ink-3'
+  }
+
+  // Fallback by calor
+  if (calor === 'agendado' || calor === 'quente') return 'bg-[#EBF5F0] text-[#1A6B45]'
+  if (calor === 'morno') return 'bg-warm-lt text-warm'
+  return 'bg-surface-2 text-ink-3'
+}
+
+// ─── Avatar ──────────────────────────────────────────────────────────────────
+interface AvatarProps {
+  nome: string
+  size?: 'sm' | 'md' | 'lg'
+  calor?: ContactHeat
+  pipeline?: PipelineStage
+}
+
+export function Avatar({ nome, size = 'md', calor, pipeline }: AvatarProps) {
+  const colorClass = (calor || pipeline)
+    ? getAvatarColor(calor, pipeline)
+    : (() => {
+        const AVATAR_COLORS = [
+          'bg-accent-lt text-accent',
+          'bg-warm-lt text-warm',
+          'bg-[#EBF5F0] text-[#1A6B45]',
+          'bg-surface-2 text-ink-3',
+        ]
+        return AVATAR_COLORS[nome.charCodeAt(0) % AVATAR_COLORS.length]
+      })()
+
   const sizeClass = size === 'sm' ? 'w-8 h-8 text-[11px] rounded-[8px]'
     : size === 'lg' ? 'w-12 h-12 text-[16px] rounded-[14px]'
     : 'w-[38px] h-[38px] text-[13px] rounded-[11px]'
+
   return (
-    <div className={clsx('flex items-center justify-center font-medium shrink-0', AVATAR_COLORS[idx], sizeClass)}>
+    <div className={clsx('flex items-center justify-center font-medium shrink-0', colorClass, sizeClass)}>
       {iniciais(nome)}
     </div>
   )
@@ -69,7 +106,7 @@ export function ContactCardSkeleton() {
 
 export function MetricCardSkeleton() {
   return (
-    <div className="bg-surface-2 rounded-xl p-3.5">
+    <div className="bg-surface-3 rounded-xl p-3.5">
       <Skeleton className="h-7 w-8 mb-1" />
       <Skeleton className="h-2.5 w-20" />
     </div>

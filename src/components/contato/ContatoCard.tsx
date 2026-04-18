@@ -39,7 +39,12 @@ export function ContatoCard({ contato, showPrioridade = true, compact = false }:
         compact ? 'py-2' : ''
       )}
     >
-      <Avatar nome={contato.nome} size={compact ? 'sm' : 'md'} />
+      <Avatar
+        nome={contato.nome}
+        size={compact ? 'sm' : 'md'}
+        calor={contato.calor}
+        pipeline={contato.pipeline_stage}
+      />
 
       <div className="flex-1 min-w-0">
         <p className={clsx('font-medium text-ink truncate', compact ? 'text-[12px]' : 'text-[13px]')}>
