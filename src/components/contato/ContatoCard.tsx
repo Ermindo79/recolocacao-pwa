@@ -11,26 +11,22 @@ interface ContatoCardProps {
 }
 
 function getSubtexto(contato: Contato): string {
-  const ponteNome = contato.ponte_contato?.nome ?? contato.ponte_contato_nome
-  const ponte = !contato.contato_primario && ponteNome
-    ? ` · via ${ponteNome.split(' ')[0]}`
-    : ''
-
   if (contato.tipo === 'empresa') {
-    return `${contato.empresa_nome ?? ''}${ponte}`
+    return contato.empresa_nome ?? ''
   }
   if (contato.tipo === 'headhunter') {
-    return `Headhunter · ${contato.empresa_nome ?? ''}${ponte}`
+    return `Headhunter · ${contato.empresa_nome ?? ''}`
   }
   if (contato.tipo === 'conselho') {
-    return `Independent${ponte}`
+    return 'Independent'
   }
-  return `${contato.empresa_nome ?? ''}${ponte}`
+  return contato.empresa_nome ?? ''
 }
 
 export function ContatoCard({ contato, showPrioridade = true, compact = false }: ContatoCardProps) {
   const navigate = useNavigate()
   const vencido = contato.followup_vencido
+  const ponteNome = contato.ponte_contato?.nome?.split(' ')[0] ?? contato.ponte_contato_nome?.split(' ')[0]
 
   return (
     <button
@@ -59,7 +55,7 @@ export function ContatoCard({ contato, showPrioridade = true, compact = false }:
         {showPrioridade && (
           <PrimarioBadge
             primario={contato.contato_primario}
-            ponteNome={contato.ponte_contato?.nome?.split(' ')[0] ?? contato.ponte_contato_nome?.split(' ')[0]}
+            ponteNome={ponteNome}
           />
         )}
       </div>
