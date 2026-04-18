@@ -11,8 +11,9 @@ interface ContatoCardProps {
 }
 
 function getSubtexto(contato: Contato): string {
-  const ponte = !contato.contato_primario && contato.ponte_contato
-    ? ` · via ${contato.ponte_contato.nome.split(' ')[0]}`
+  const ponteNome = contato.ponte_contato?.nome ?? contato.ponte_contato_nome
+  const ponte = !contato.contato_primario && ponteNome
+    ? ` · via ${ponteNome.split(' ')[0]}`
     : ''
 
   if (contato.tipo === 'empresa') {
@@ -24,7 +25,6 @@ function getSubtexto(contato: Contato): string {
   if (contato.tipo === 'conselho') {
     return `Independent${ponte}`
   }
-  // consultoria_estrategia
   return `${contato.empresa_nome ?? ''}${ponte}`
 }
 
@@ -59,7 +59,7 @@ export function ContatoCard({ contato, showPrioridade = true, compact = false }:
         {showPrioridade && (
           <PrimarioBadge
             primario={contato.contato_primario}
-            ponteNome={contato.ponte_contato?.nome.split(' ')[0]}
+            ponteNome={contato.ponte_contato?.nome?.split(' ')[0] ?? contato.ponte_contato_nome?.split(' ')[0]}
           />
         )}
       </div>
@@ -67,7 +67,6 @@ export function ContatoCard({ contato, showPrioridade = true, compact = false }:
   )
 }
 
-// ─── Follow-up alert card ─────────────────────────────────────────────────────
 export function FollowUpCard({ contato }: { contato: Contato }) {
   const navigate = useNavigate()
   return (

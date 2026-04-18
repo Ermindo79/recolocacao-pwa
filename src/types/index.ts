@@ -32,6 +32,7 @@ export interface Contato {
   contato_primario: boolean
   ponte_contato_id?: string
   ponte_contato?: Pick<Contato, 'id' | 'nome'>
+  ponte_contato_nome?: string
   notas?: string
   pipeline_stage: PipelineStage
   stage_updated_at: string
@@ -41,7 +42,6 @@ export interface Contato {
   arquivado: boolean
   created_at: string
   updated_at: string
-  // computed
   calor?: ContactHeat
   dias_sem_contato?: number
   followup_vencido?: boolean
