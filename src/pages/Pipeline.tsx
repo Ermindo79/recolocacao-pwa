@@ -18,7 +18,7 @@ export default function PipelinePage() {
   const { addToast } = useUIStore()
   const [selected, setSelected] = useState<Contato | null>(null)
 
-  const ativos = contatos.filter(c => c.pipeline_stage !== 'arquivado')
+  const ativos = contatos
 
   async function moverPara(contato: Contato, novoStage: PipelineStage) {
     setSelected(null)
@@ -61,7 +61,6 @@ export default function PipelinePage() {
         </div>
       )}
 
-      {/* Bottom sheet ao selecionar card */}
       {selected && (
         <div
           className="absolute inset-0 bg-black/30 z-40 flex flex-col justify-end"
@@ -111,7 +110,6 @@ function KanbanColumn({ stage, contatos, onCardTap }: {
   const alertDays = STAGE_ALERT_DAYS[stage]
   return (
     <div className="w-[200px] bg-surface-2 rounded-xl p-2.5 flex flex-col">
-      {/* Header */}
       <div className="flex items-center justify-between px-1 mb-2.5">
         <span className="text-[11px] font-medium text-ink-3 uppercase tracking-[0.06em]">
           {STAGE_LABELS[stage]}
@@ -120,13 +118,14 @@ function KanbanColumn({ stage, contatos, onCardTap }: {
           'text-[10px] font-medium px-1.5 py-0.5 rounded-full',
           stage === 'oportunidade'
             ? 'bg-[#EBF5F0] text-[#1A6B45]'
+            : stage === 'arquivado'
+            ? 'bg-surface-3 text-ink-4'
             : 'bg-accent-lt text-accent'
         )}>
           {contatos.length}
         </span>
       </div>
 
-      {/* Cards */}
       <div className="space-y-2 flex-1">
         {contatos.map((c) => {
           const dias = diasSemContato(c.ultima_interacao_at)

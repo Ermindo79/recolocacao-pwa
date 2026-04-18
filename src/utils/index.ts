@@ -49,11 +49,11 @@ export function iniciais(nome: string): string {
 }
 
 export const CALOR_CONFIG: Record<ContactHeat, { label: string; className: string }> = {
-  quente:      { label: 'Quente',   className: 'bg-[#FDF0EE] text-[#C0392B]' },
-  morno:       { label: 'Morno',    className: 'bg-[#FDF5E6] text-[#9A6B1A]' },
-  frio:        { label: 'Frio',     className: 'bg-surface-2 text-ink-3' },
+  quente:      { label: 'Quente',      className: 'bg-[#FDF0EE] text-[#C0392B]' },
+  morno:       { label: 'Morno',       className: 'bg-[#FDF5E6] text-[#9A6B1A]' },
+  frio:        { label: 'Frio',        className: 'bg-surface-2 text-ink-3' },
   sem_contato: { label: 'Sem contato', className: 'bg-surface-2 text-ink-4' },
-  agendado:    { label: 'Agendado', className: 'bg-accent-lt text-accent' },
+  agendado:    { label: 'Agendado',    className: 'bg-accent-lt text-accent' },
 }
 
 export const TIPO_CONFIG: Record<string, { label: string; className: string }> = {
@@ -63,16 +63,16 @@ export const TIPO_CONFIG: Record<string, { label: string; className: string }> =
 }
 
 export const STAGE_LABELS: Record<PipelineStage, string> = {
-  mapeado:     'Mapeado',
-  acionado:    'Acionado',
-  reuniao:     'Reunião',
-  followup:    'Follow-up',
-  oportunidade:'Oportunidade',
-  arquivado:   'Arquivado',
+  mapeado:      'Mapeado',
+  acionado:     'Acionado',
+  reuniao:      'Reunião',
+  followup:     'Follow-up',
+  oportunidade: 'Oportunidade',
+  arquivado:    'Arquivado',
 }
 
 export const STAGE_ORDER: PipelineStage[] = [
-  'mapeado', 'acionado', 'reuniao', 'followup', 'oportunidade',
+  'mapeado', 'acionado', 'reuniao', 'followup', 'oportunidade', 'arquivado',
 ]
 
 export function ordenarPorUrgencia(contatos: Contato[]): Contato[] {
