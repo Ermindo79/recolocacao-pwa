@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useContato, useReunioes } from '../hooks'
 import { PageWrapper, TopBar, FAB } from '../components/layout'
@@ -183,9 +183,15 @@ export default function ContatoDetalhePage() {
 }
 
 function ReuniaoItem({ reuniao, isFirst }: { reuniao: Reuniao; isFirst: boolean }) {
+  const [expandido, setExpandido] = useState(false)
   const tom = reuniao.tom ? TOM_CONFIG[reuniao.tom] : null
+  const temTextoLongo = reuniao.conteudo && reuniao.conteudo.length > 120
+
   return (
-    <div className="px-3.5 py-3">
+    <button
+      onClick={() => setExpandido(e => !e)}
+      className="w-full text-left px-3.5 py-3 active:bg-surface-2 transition-colors"
+    >
       <div className="flex items-start gap-2.5">
         <div className={clsx(
           'w-2 h-2 rounded-full mt-1.5 shrink-0',
@@ -197,16 +203,26 @@ function ReuniaoItem({ reuniao, isFirst }: { reuniao: Reuniao; isFirst: boolean 
               {reuniao.formato ? FORMATO_LABEL[reuniao.formato] : 'Reunião'}
               {tom && <span className={clsx('ml-1.5 font-normal', tom.className)}>· {tom.label}</span>}
             </span>
-            <span className="text-[10px] text-ink-4 shrink-0">{formatarData(reuniao.data)}</span>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="text-[10px] text-ink-4">{formatarData(reuniao.data)}</span>
+              {temTextoLongo && (
+                <span className="text-[10px] text-ink-4">{expandido ? '▲' : '▼'}</span>
+              )}
+            </div>
           </div>
           {reuniao.conteudo && (
-            <p className="text-[12px] text-ink-2 leading-relaxed line-clamp-3">{reuniao.conteudo}</p>
+            <p className={clsx(
+              'text-[12px] text-ink-2 leading-relaxed',
+              !expandido && 'line-clamp-3'
+            )}>
+              {reuniao.conteudo}
+            </p>
           )}
           {reuniao.proximo_passo && (
             <p className="text-[11px] text-ink-3 mt-1">→ {reuniao.proximo_passo}</p>
           )}
         </div>
       </div>
-    </div>
+    </button>
   )
 }
