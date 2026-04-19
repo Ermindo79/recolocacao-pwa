@@ -2,9 +2,13 @@ import React, { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useContato, useReunioes } from '../hooks'
 import { PageWrapper, TopBar, FAB } from '../components/layout'
-import { Avatar, CalorBadge, TipoBadge, Skeleton, ErrorState, Badge } from '../components/ui'
-import { clsx, formatarData, formatarDataCompleta, tempoAtras, followupVencido } from '../utils'
-import type { Reuniao } from '../types'
+import { Avatar, CalorBadge, TipoBadge, Skeleton, ErrorState, Button } from '../components/ui'
+import { clsx, formatarData, formatarDataCompleta, followupVencido } from '../utils'
+import { contatosService } from '../services/contatos.service'
+import { useUIStore } from '../stores/ui.store'
+import { useQueryClient } from '@tanstack/react-query'
+import { KEYS } from '../hooks'
+import type { Reuniao, ContactType } from '../types'
 
 const TOM_CONFIG = {
   muito_positivo: { label: 'Muito positivo', className: 'text-[#1A6B45]' },
@@ -21,11 +25,62 @@ const FORMATO_LABEL = {
   presencial: 'Presencial',
 }
 
+const TIPOS: { value: ContactType; label: string }[] = [
+  { value: 'empresa', label: 'Empresa' },
+  { value: 'consultoria_estrategia', label: 'Consultoria' },
+  { value: 'private_equity', label: 'Private Equity' },
+  { value: 'conselho', label: 'Conselho' },
+  { value: 'headhunter', label: 'Headhunter' },
+]
+
 export default function ContatoDetalhePage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { addToast } = useUIStore()
+  const qc = useQueryClient()
   const { data: contato, isLoading, error } = useContato(id ?? '')
   const { data: reunioes = [], isLoading: loadingReunioes } = useReunioes(id ?? '')
+  const [editando, setEditando] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [draft, setDraft] = useState<Record<string, string>>({})
+
+  function abrirEdicao() {
+    if (!contato) return
+    setDraft({
+      nome: contato.nome ?? '',
+      cargo: contato.cargo ?? '',
+      empresa_nome: contato.empresa_nome ?? '',
+      notas: contato.notas ?? '',
+      proximo_passo: contato.proximo_passo ?? '',
+      proximo_passo_data: contato.proximo_passo_data ?? '',
+      tipo: contato.tipo ?? 'empresa',
+    })
+    setEditando(true)
+  }
+
+  async function salvarEdicao() {
+    if (!contato) return
+    setSaving(true)
+    try {
+      await contatosService.update(contato.id, {
+        nome: draft.nome,
+        cargo: draft.cargo || undefined,
+        empresa_nome: draft.empresa_nome || undefined,
+        notas: draft.notas || undefined,
+        proximo_passo: draft.proximo_passo || undefined,
+        proximo_passo_data: draft.proximo_passo_data || undefined,
+        tipo: draft.tipo as ContactType,
+      })
+      await qc.invalidateQueries({ queryKey: KEYS.contato(contato.id) })
+      await qc.invalidateQueries({ queryKey: KEYS.contatos })
+      setEditando(false)
+      addToast('Contato atualizado.')
+    } catch {
+      addToast('Erro ao salvar. Tente novamente.', 'error')
+    } finally {
+      setSaving(false)
+    }
+  }
 
   if (isLoading) return (
     <div className="flex flex-col h-[100dvh] max-w-md mx-auto">
@@ -50,25 +105,32 @@ export default function ContatoDetalhePage() {
 
   const vencido = contato.proximo_passo_data ? followupVencido(contato.proximo_passo_data) : false
 
+  const inputClass = 'w-full h-11 rounded-xl border border-[rgba(26,26,24,0.18)] bg-white px-3.5 text-[14px] text-ink placeholder:text-ink-4 outline-none focus:border-accent'
+  const labelClass = 'text-[11px] font-medium text-ink-3 block mb-1'
+
   return (
     <div className="flex flex-col h-[100dvh] max-w-md mx-auto bg-white overflow-hidden">
       <TopBar
         back onBack={() => navigate(-1)}
         right={
-          <button
-            onClick={() => navigate(`/reuniao/prep/${contato.id}`)}
-            className="text-[12px] font-medium text-accent px-3 py-1.5 bg-accent-lt rounded-lg"
-          >
-            Prep →
-          </button>
+          editando ? (
+            <div className="flex gap-2">
+              <button onClick={() => setEditando(false)} className="text-[12px] text-ink-3 px-3 py-1.5">Cancelar</button>
+              <Button size="sm" onClick={salvarEdicao} loading={saving}>Salvar</Button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <button onClick={abrirEdicao} className="text-[12px] font-medium text-ink-2 px-3 py-1.5 bg-surface-2 rounded-lg">Editar</button>
+              <button onClick={() => navigate(`/reuniao/prep/${contato.id}`)} className="text-[12px] font-medium text-accent px-3 py-1.5 bg-accent-lt rounded-lg">Prep →</button>
+            </div>
+          )
         }
       />
 
       <div className="flex-1 overflow-y-auto bg-surface">
-        {/* Header do contato */}
         <div className="bg-white px-4 pt-4 pb-4 border-b border-[rgba(26,26,24,0.06)]">
           <div className="flex items-center gap-3 mb-3">
-            <Avatar nome={contato.nome} size="lg" />
+            <Avatar nome={contato.nome} size="lg" calor={contato.calor} pipeline={contato.pipeline_stage} />
             <div className="flex-1 min-w-0">
               <h1 className="text-[20px] font-medium text-ink leading-tight truncate">{contato.nome}</h1>
               <p className="text-[12px] text-ink-3 mt-0.5">
@@ -76,15 +138,12 @@ export default function ContatoDetalhePage() {
               </p>
             </div>
           </div>
-
           <div className="flex gap-2 flex-wrap">
             <TipoBadge tipo={contato.tipo} />
             <CalorBadge calor={contato.calor ?? 'sem_contato'} />
             {!contato.contato_primario && contato.ponte_contato && (
-              <button
-                onClick={() => navigate(`/contatos/${contato.ponte_contato!.id}`)}
-                className="inline-flex items-center text-[10px] font-medium px-[7px] py-[2px] rounded-full bg-surface-2 text-accent underline-offset-1"
-              >
+              <button onClick={() => navigate(`/contatos/${contato.ponte_contato!.id}`)}
+                className="inline-flex items-center text-[10px] font-medium px-[7px] py-[2px] rounded-full bg-surface-2 text-accent">
                 via {contato.ponte_contato.nome}
               </button>
             )}
@@ -92,87 +151,108 @@ export default function ContatoDetalhePage() {
         </div>
 
         <div className="px-4 py-4 space-y-3">
-          {/* Próximo passo */}
-          <div className={clsx(
-            'rounded-xl px-3.5 py-3 border',
-            vencido
-              ? 'bg-[#FDF5E6] border-[rgba(154,107,26,0.2)]'
-              : contato.proximo_passo
-              ? 'bg-accent-lt border-[rgba(28,61,90,0.12)]'
-              : 'bg-surface-2 border-[rgba(26,26,24,0.08)]'
-          )}>
-            <p className={clsx(
-              'text-[10px] font-medium uppercase tracking-[0.08em] mb-1',
-              vencido ? 'text-[#9A6B1A]' : contato.proximo_passo ? 'text-accent' : 'text-ink-4'
-            )}>
-              Próximo passo
-            </p>
-            {contato.proximo_passo ? (
-              <>
-                <p className={clsx('text-[14px] font-medium', vencido ? 'text-[#9A6B1A]' : 'text-ink')}>
-                  {contato.proximo_passo}
-                </p>
-                {contato.proximo_passo_data && (
-                  <p className={clsx('text-[11px] mt-0.5', vencido ? 'text-[#9A6B1A]/70' : 'text-ink-3')}>
-                    {vencido
-                      ? `Deveria ter sido em ${formatarDataCompleta(contato.proximo_passo_data)}`
-                      : formatarDataCompleta(contato.proximo_passo_data)}
-                  </p>
-                )}
-              </>
-            ) : (
-              <p className="text-[13px] text-ink-4">Nenhum próximo passo definido.</p>
-            )}
-          </div>
 
-          {/* Ações rápidas */}
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={() => navigate(`/reuniao/nova?contato=${contato.id}`)}
-              className="flex items-center justify-center gap-2 bg-accent text-white rounded-xl py-3 text-[13px] font-medium active:opacity-80"
-            >
-              <svg width="16" height="16" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round">
-                <path d="M12 5v14M5 12h14" />
-              </svg>
-              Registrar
-            </button>
-            <button
-              onClick={() => navigate(`/reuniao/prep/${contato.id}`)}
-              className="flex items-center justify-center gap-2 bg-accent-lt text-accent rounded-xl py-3 text-[13px] font-medium active:opacity-80"
-            >
-              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <polyline points="14 2 14 8 20 8" /><line x1="8" y1="13" x2="16" y2="13" />
-              </svg>
-              Prep
-            </button>
-          </div>
-
-          {/* Notas */}
-          {contato.notas && (
-            <div className="bg-white border border-[rgba(26,26,24,0.10)] rounded-xl px-3.5 py-3">
-              <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-ink-4 mb-1.5">Contexto</p>
-              <p className="text-[13px] text-ink-2 leading-relaxed">{contato.notas}</p>
+          {/* Formulário de edição */}
+          {editando ? (
+            <div className="bg-white border border-[rgba(26,26,24,0.10)] rounded-xl px-3.5 py-3 space-y-3">
+              <div>
+                <label className={labelClass}>Nome</label>
+                <input value={draft.nome} onChange={e => setDraft(d => ({ ...d, nome: e.target.value }))} className={inputClass} />
+              </div>
+              <div>
+                <label className={labelClass}>Cargo</label>
+                <input value={draft.cargo} onChange={e => setDraft(d => ({ ...d, cargo: e.target.value }))} placeholder="Ex: Managing Partner" className={inputClass} />
+              </div>
+              <div>
+                <label className={labelClass}>Empresa</label>
+                <input value={draft.empresa_nome} onChange={e => setDraft(d => ({ ...d, empresa_nome: e.target.value }))} placeholder="Nome da empresa" className={inputClass} />
+              </div>
+              <div>
+                <label className={labelClass}>Categoria</label>
+                <select value={draft.tipo} onChange={e => setDraft(d => ({ ...d, tipo: e.target.value }))}
+                  className="w-full h-11 rounded-xl border border-[rgba(26,26,24,0.18)] bg-white px-3.5 text-[14px] text-ink outline-none focus:border-accent">
+                  {TIPOS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className={labelClass}>Próximo passo</label>
+                <input value={draft.proximo_passo} onChange={e => setDraft(d => ({ ...d, proximo_passo: e.target.value }))} placeholder="Ex: enviar CV, marcar café..." className={inputClass} />
+              </div>
+              <div>
+                <label className={labelClass}>Data do próximo passo</label>
+                <input type="date" value={draft.proximo_passo_data} onChange={e => setDraft(d => ({ ...d, proximo_passo_data: e.target.value }))} className={inputClass} />
+              </div>
+              <div>
+                <label className={labelClass}>Contexto</label>
+                <textarea value={draft.notas} onChange={e => setDraft(d => ({ ...d, notas: e.target.value }))} rows={3}
+                  placeholder="Informações importantes..."
+                  className="w-full rounded-xl border border-[rgba(26,26,24,0.18)] bg-white px-3.5 py-3 text-[14px] text-ink placeholder:text-ink-4 outline-none focus:border-accent resize-none" />
+              </div>
             </div>
+          ) : (
+            <>
+              {/* Próximo passo */}
+              <div className={clsx('rounded-xl px-3.5 py-3 border',
+                vencido ? 'bg-[#FDF5E6] border-[rgba(154,107,26,0.2)]'
+                : contato.proximo_passo ? 'bg-accent-lt border-[rgba(28,61,90,0.12)]'
+                : 'bg-surface-2 border-[rgba(26,26,24,0.08)]'
+              )}>
+                <p className={clsx('text-[10px] font-medium uppercase tracking-[0.08em] mb-1',
+                  vencido ? 'text-[#9A6B1A]' : contato.proximo_passo ? 'text-accent' : 'text-ink-4'
+                )}>Próximo passo</p>
+                {contato.proximo_passo ? (
+                  <>
+                    <p className={clsx('text-[14px] font-medium', vencido ? 'text-[#9A6B1A]' : 'text-ink')}>{contato.proximo_passo}</p>
+                    {contato.proximo_passo_data && (
+                      <p className={clsx('text-[11px] mt-0.5', vencido ? 'text-[#9A6B1A]/70' : 'text-ink-3')}>
+                        {vencido ? `Deveria ter sido em ${formatarDataCompleta(contato.proximo_passo_data)}` : formatarDataCompleta(contato.proximo_passo_data)}
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-[13px] text-ink-4">Nenhum próximo passo definido.</p>
+                )}
+              </div>
+
+              {/* Ações rápidas */}
+              <div className="grid grid-cols-2 gap-2">
+                <button onClick={() => navigate(`/reuniao/nova?contato=${contato.id}`)}
+                  className="flex items-center justify-center gap-2 bg-accent text-white rounded-xl py-3 text-[13px] font-medium active:opacity-80">
+                  <svg width="16" height="16" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
+                  Registrar
+                </button>
+                <button onClick={() => navigate(`/reuniao/prep/${contato.id}`)}
+                  className="flex items-center justify-center gap-2 bg-accent-lt text-accent rounded-xl py-3 text-[13px] font-medium active:opacity-80">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" /><line x1="8" y1="13" x2="16" y2="13" />
+                  </svg>
+                  Prep
+                </button>
+              </div>
+
+              {/* Notas */}
+              {contato.notas && (
+                <div className="bg-white border border-[rgba(26,26,24,0.10)] rounded-xl px-3.5 py-3">
+                  <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-ink-4 mb-1.5">Contexto</p>
+                  <p className="text-[13px] text-ink-2 leading-relaxed">{contato.notas}</p>
+                </div>
+              )}
+            </>
           )}
 
-          {/* Timeline de reuniões */}
+          {/* Histórico */}
           <div>
             <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-ink-4 mb-2">Histórico</p>
             {loadingReunioes ? (
-              <div className="space-y-2">
-                <Skeleton className="h-16 rounded-xl" />
-                <Skeleton className="h-16 rounded-xl" />
-              </div>
+              <div className="space-y-2"><Skeleton className="h-16 rounded-xl" /><Skeleton className="h-16 rounded-xl" /></div>
             ) : reunioes.length === 0 ? (
               <div className="bg-surface-2 rounded-xl px-3.5 py-3">
                 <p className="text-[13px] text-ink-4">Nenhuma interação registrada ainda.</p>
               </div>
             ) : (
               <div className="bg-white border border-[rgba(26,26,24,0.10)] rounded-xl divide-y divide-[rgba(26,26,24,0.06)]">
-                {reunioes.map((r, i) => (
-                  <ReuniaoItem key={r.id} reuniao={r} isFirst={i === 0} />
-                ))}
+                {reunioes.map((r, i) => <ReuniaoItem key={r.id} reuniao={r} isFirst={i === 0} />)}
               </div>
             )}
           </div>
@@ -188,15 +268,9 @@ function ReuniaoItem({ reuniao, isFirst }: { reuniao: Reuniao; isFirst: boolean 
   const temTextoLongo = reuniao.conteudo && reuniao.conteudo.length > 120
 
   return (
-    <button
-      onClick={() => setExpandido(e => !e)}
-      className="w-full text-left px-3.5 py-3 active:bg-surface-2 transition-colors"
-    >
+    <button onClick={() => setExpandido(e => !e)} className="w-full text-left px-3.5 py-3 active:bg-surface-2 transition-colors">
       <div className="flex items-start gap-2.5">
-        <div className={clsx(
-          'w-2 h-2 rounded-full mt-1.5 shrink-0',
-          isFirst ? 'bg-accent' : 'bg-surface-3'
-        )} />
+        <div className={clsx('w-2 h-2 rounded-full mt-1.5 shrink-0', isFirst ? 'bg-accent' : 'bg-surface-3')} />
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2 mb-0.5">
             <span className="text-[12px] font-medium text-ink">
@@ -205,16 +279,11 @@ function ReuniaoItem({ reuniao, isFirst }: { reuniao: Reuniao; isFirst: boolean 
             </span>
             <div className="flex items-center gap-1.5 shrink-0">
               <span className="text-[10px] text-ink-4">{formatarData(reuniao.data)}</span>
-              {temTextoLongo && (
-                <span className="text-[10px] text-ink-4">{expandido ? '▲' : '▼'}</span>
-              )}
+              {temTextoLongo && <span className="text-[10px] text-ink-4">{expandido ? '▲' : '▼'}</span>}
             </div>
           </div>
           {reuniao.conteudo && (
-            <p className={clsx(
-              'text-[12px] text-ink-2 leading-relaxed',
-              !expandido && 'line-clamp-3'
-            )}>
+            <p className={clsx('text-[12px] text-ink-2 leading-relaxed', !expandido && 'line-clamp-3')}>
               {reuniao.conteudo}
             </p>
           )}
