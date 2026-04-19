@@ -57,9 +57,11 @@ export const CALOR_CONFIG: Record<ContactHeat, { label: string; className: strin
 }
 
 export const TIPO_CONFIG: Record<string, { label: string; className: string }> = {
-  headhunter:  { label: 'Headhunter',  className: 'bg-[#EBF0F7] text-[#1C3D5A]' },
-  consultoria: { label: 'Consultoria', className: 'bg-[#EBF5F0] text-[#1A6B45]' },
-  empresa:     { label: 'Empresa',     className: 'bg-surface-2 text-ink-2' },
+  headhunter:            { label: 'Headhunter',    className: 'bg-[#EBF0F7] text-[#1C3D5A]' },
+  consultoria_estrategia:{ label: 'Consultoria',   className: 'bg-[#EBF5F0] text-[#1A6B45]' },
+  private_equity:        { label: 'Private Equity',className: 'bg-[#EEEDFE] text-[#3C3489]' },
+  conselho:              { label: 'Conselho',      className: 'bg-surface-2 text-ink-2' },
+  empresa:               { label: 'Empresa',       className: 'bg-surface-2 text-ink-2' },
 }
 
 export const STAGE_LABELS: Record<PipelineStage, string> = {
