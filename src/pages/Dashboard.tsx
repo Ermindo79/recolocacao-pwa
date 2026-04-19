@@ -48,7 +48,7 @@ export default function DashboardPage() {
             <div className="grid grid-cols-3 gap-2">
               <MetricCard
                 value={data.metricas.contatos_ativos}
-                label="Contatos"
+                label="Contatos na base"
               />
               <MetricCard
                 value={data.metricas.reunioes_semana}
