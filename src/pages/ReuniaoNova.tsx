@@ -41,7 +41,7 @@ export default function ReuniaoNovaPage() {
   const [proximoPasso, setProximoPasso] = useState('')
   const [proximoPassoData, setProximoPassoData] = useState('')
 
-  const canSave = contatoId && proximoPasso.trim() && proximoPassoData
+  const canSave = !!contatoId
 
   async function handleSave() {
     if (!canSave) return
@@ -53,11 +53,11 @@ export default function ReuniaoNovaPage() {
         tom: tom || undefined,
         conteudo: conteudo || undefined,
         pendencias: pendencias || undefined,
-        proximo_passo: proximoPasso.trim(),
-        proximo_passo_data: proximoPassoData,
+        proximo_passo: proximoPasso.trim() || '',
+        proximo_passo_data: proximoPassoData || data,
       })
       const nomeContato = contatos.find(c => c.id === contatoId)?.nome ?? ''
-      addToast(`Salvo. Próximo passo com ${nomeContato.split(' ')[0]}: ${proximoPassoData}`)
+      addToast(`Interação com ${nomeContato.split(' ')[0]} salva.`)
       navigate(`/contatos/${contatoId}`)
     } catch {
       addToast('Erro ao salvar. Tente novamente.', 'error')
@@ -167,27 +167,22 @@ export default function ReuniaoNovaPage() {
           />
         </div>
 
-        {/* Próximo passo — OBRIGATÓRIO */}
+        {/* Próximo passo — OPCIONAL */}
         <div>
           <label className="text-[12px] font-medium text-ink-3 block mb-1.5">
-            Próximo passo <span className="text-[#C0392B]">*</span>
+            Próximo passo <span className="text-ink-4">(opcional)</span>
           </label>
           <input
             value={proximoPasso}
             onChange={(e) => setProximoPasso(e.target.value)}
             placeholder="Ex: café presencial em SP em 13/04"
-            className={clsx(
-              'w-full h-12 rounded-xl border bg-white px-3.5 text-[14px] text-ink placeholder:text-ink-4 outline-none transition-colors',
-              !proximoPasso.trim() && proximoPassoData
-                ? 'border-[#C0392B] focus:border-[#C0392B]'
-                : 'border-[rgba(26,26,24,0.18)] focus:border-accent'
-            )}
+            className="w-full h-12 rounded-xl border border-[rgba(26,26,24,0.18)] bg-white px-3.5 text-[14px] text-ink placeholder:text-ink-4 outline-none focus:border-accent"
           />
         </div>
 
         <div>
           <label className="text-[12px] font-medium text-ink-3 block mb-1.5">
-            Data do próximo passo <span className="text-[#C0392B]">*</span>
+            Data do próximo passo <span className="text-ink-4">(opcional)</span>
           </label>
           <input
             type="date"
@@ -197,11 +192,6 @@ export default function ReuniaoNovaPage() {
           />
         </div>
 
-        {!canSave && (proximoPasso || contatoId) && (
-          <p className="text-[11px] text-[#9A6B1A] bg-[#FDF5E6] px-3 py-2 rounded-lg">
-            Defina o próximo passo e a data antes de salvar.
-          </p>
-        )}
       </div>
 
       {/* Footer fixo */}
