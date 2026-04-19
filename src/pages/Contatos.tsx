@@ -9,11 +9,12 @@ import type { Contato, ContactType } from '../types'
 
 type ViewMode = 'pessoas' | 'categorias'
 
-const CATEGORIAS: { key: ContactType; label: string }[] = [
-  { key: 'empresa', label: 'Empresas' },
-  { key: 'consultoria_estrategia', label: 'Consultorias de Estratégia' },
-  { key: 'conselho', label: 'Membros de Conselho de Administração' },
-  { key: 'headhunter', label: 'Headhunter' },
+const CATEGORIAS: { key: ContactType; label: string; agrupar: boolean }[] = [
+  { key: 'empresa', label: 'Empresas', agrupar: true },
+  { key: 'consultoria_estrategia', label: 'Consultorias de Estratégia', agrupar: true },
+  { key: 'private_equity', label: 'Private Equity', agrupar: true },
+  { key: 'headhunter', label: 'Headhunters', agrupar: true },
+  { key: 'conselho', label: 'Membros de Conselho de Administração', agrupar: false },
 ]
 
 export default function ContatosPage() {
@@ -132,14 +133,14 @@ function ViewCategorias({ contatos, onNavigate }: { contatos: Contato[]; onNavig
 
   return (
     <div className="space-y-5">
-      {CATEGORIAS.map(({ key, label }) => {
+      {CATEGORIAS.map(({ key, label, agrupar }) => {
         const grupo = contatos.filter(c => c.tipo === key)
         if (grupo.length === 0) return null
 
         return (
           <div key={key}>
             <SectionHeader label={`${label} · ${grupo.length}`} />
-            {key === 'empresa' ? (
+            {agrupar ? (
               <EmpresasGroup
                 contatos={grupo}
                 expanded={expandedEmpresa}
@@ -186,7 +187,7 @@ function EmpresasGroup({ contatos, expanded, onToggle, onNavigate }: {
             >
               <div>
                 <p className="text-[13px] font-medium text-ink">{empresa}</p>
-                <p className="text-[11px] text-ink-3">{pessoas[0]?.empresa?.setor ?? 'Empresa'}</p>
+                <p className="text-[11px] text-ink-3">{pessoas[0]?.empresa?.setor ?? ''}</p>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-medium bg-accent-lt text-accent px-2 py-0.5 rounded-full">
@@ -204,11 +205,11 @@ function EmpresasGroup({ contatos, expanded, onToggle, onNavigate }: {
                   <button key={c.id} onClick={() => onNavigate(`/contatos/${c.id}`)}
                     className="w-full flex items-center gap-3 py-2.5 border-b border-[rgba(26,26,24,0.06)] last:border-0 active:opacity-70"
                   >
-                    <Avatar nome={c.nome} size="sm" />
+                    <Avatar nome={c.nome} size="sm" calor={c.calor} pipeline={c.pipeline_stage} />
                     <div className="flex-1 min-w-0 text-left">
                       <p className="text-[12px] font-medium text-ink truncate">{c.nome}</p>
                       <p className="text-[10px] text-ink-3 mt-0.5">
-                        {c.contato_primario ? 'Primário' : `via ${c.ponte_contato?.nome ?? '—'}`}
+                        {c.cargo ?? ''}
                       </p>
                     </div>
                     <CalorBadge calor={c.calor ?? 'sem_contato'} />
