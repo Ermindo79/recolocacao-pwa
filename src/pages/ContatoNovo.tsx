@@ -30,6 +30,8 @@ export default function ContatoNovoPage() {
   const [primario, setPrimario] = useState(true)
   const [ponteId, setPonteId] = useState('')
   const [notas, setNotas] = useState('')
+  const [proximoPasso, setProximoPasso] = useState('')
+  const [proximoPassoData, setProximoPassoData] = useState('')
   const [saving, setSaving] = useState(false)
 
   const canSave = nome.trim() && (primario || ponteId)
@@ -47,6 +49,8 @@ export default function ContatoNovoPage() {
         contato_primario: primario,
         ponte_contato_id: !primario && ponteId ? ponteId : undefined,
         notas: notas.trim() || undefined,
+        proximo_passo: proximoPasso.trim() || undefined,
+        proximo_passo_data: proximoPassoData || undefined,
         pipeline_stage: 'mapeado',
         stage_updated_at: new Date().toISOString(),
         arquivado: false,
@@ -213,6 +217,31 @@ export default function ContatoNovoPage() {
             placeholder="Informações importantes sobre esta pessoa, sensibilidades, histórico..."
             rows={3}
             className="w-full rounded-xl border border-[rgba(26,26,24,0.18)] bg-white px-3.5 py-3 text-[14px] text-ink placeholder:text-ink-4 outline-none focus:border-accent resize-none"
+          />
+        </div>
+
+        {/* Próximo passo */}
+        <div>
+          <label className="text-[12px] font-medium text-ink-3 block mb-1.5">
+            Próximo passo <span className="text-ink-4">(opcional)</span>
+          </label>
+          <input
+            value={proximoPasso}
+            onChange={e => setProximoPasso(e.target.value)}
+            placeholder="Ex: enviar CV, marcar café..."
+            className="w-full h-12 rounded-xl border border-[rgba(26,26,24,0.18)] bg-white px-3.5 text-[14px] text-ink placeholder:text-ink-4 outline-none focus:border-accent"
+          />
+        </div>
+
+        <div>
+          <label className="text-[12px] font-medium text-ink-3 block mb-1.5">
+            Data do próximo passo <span className="text-ink-4">(opcional)</span>
+          </label>
+          <input
+            type="date"
+            value={proximoPassoData}
+            onChange={e => setProximoPassoData(e.target.value)}
+            className="w-full h-12 rounded-xl border border-[rgba(26,26,24,0.18)] bg-white px-3.5 text-[14px] text-ink outline-none focus:border-accent"
           />
         </div>
 
