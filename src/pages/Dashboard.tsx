@@ -93,7 +93,7 @@ export default function DashboardPage() {
         {/* Reuniões próximas */}
         {data && data.reunioes_proximas.length > 0 && (
           <div>
-            <SectionHeader label="Próximas 48h" count={data.reunioes_proximas.length} />
+            <SectionHeader label="Próximos 7 dias" count={data.reunioes_proximas.length} />
             <div className="space-y-2">
               {data.reunioes_proximas.map((r) => {
                 const dias = diasRestantes(r.proximo_passo_data ?? r.data)
