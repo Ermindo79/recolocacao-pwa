@@ -6,6 +6,65 @@ import { PageWrapper } from '../components/layout'
 import { Button } from '../components/ui'
 import { formatarData, clsx } from '../utils'
 
+const GLOSSARIO = [
+  {
+    titulo: 'Calor',
+    cor: 'bg-accent-lt text-accent',
+    itens: [
+      { termo: 'Agendado', desc: 'Tem reunião futura marcada no app.' },
+      { termo: 'Quente', desc: 'Última interação há 7 dias ou menos.' },
+      { termo: 'Morno', desc: 'Última interação entre 8 e 21 dias.' },
+      { termo: 'Frio', desc: 'Última interação entre 22 e 60 dias.' },
+      { termo: 'Sem contato', desc: 'Mais de 60 dias sem interação ou nunca houve.' },
+    ],
+  },
+  {
+    titulo: 'Estágios do Pipeline',
+    cor: 'bg-[#EBF5F0] text-[#1A6B45]',
+    itens: [
+      { termo: 'Mapeado', desc: 'Identificado, ainda não acionado.' },
+      { termo: 'Acionado', desc: 'Primeiro contato feito.' },
+      { termo: 'Reunião', desc: 'Reunião marcada ou recém acontecida, ainda não processada.' },
+      { termo: 'Follow-up', desc: 'Reunião processada, aguardando retorno ou próximo movimento.' },
+      { termo: 'Oportunidade', desc: 'Processo seletivo ativo ou proposta em andamento.' },
+      { termo: 'Arquivado', desc: 'Fora do processo ativo.' },
+    ],
+  },
+  {
+    titulo: 'Cor do Avatar',
+    cor: 'bg-[#FDF5E6] text-[#9A6B1A]',
+    itens: [
+      { termo: '🟢 Verde', desc: 'Reunião ou Oportunidade (qualquer calor). Quente ou Agendado em Followup.' },
+      { termo: '🔵 Azul', desc: 'Morno em Followup.' },
+      { termo: '🟠 Laranja', desc: 'Frio em Followup. Morno/Quente/Agendado em Acionado.' },
+      { termo: '⚪ Cinza', desc: 'Mapeado, Arquivado, Frio ou Sem contato em qualquer stage.' },
+    ],
+  },
+  {
+    titulo: 'Dashboard',
+    cor: 'bg-[#EEEDFE] text-[#3C3489]',
+    itens: [
+      { termo: 'Atenção', desc: 'Contatos com próximo passo vencido — você tinha algo a fazer e não fez.' },
+      { termo: 'Próximos 7 dias', desc: 'Reuniões com data entre hoje e 7 dias à frente.' },
+      { termo: 'Silêncios', desc: 'Contatos com calor Frio ou Sem contato que não estão arquivados.' },
+      { termo: 'Contatos (métrica)', desc: 'Ativos nos stages Acionado, Reunião, Followup e Oportunidade.' },
+      { termo: 'Reuniões (métrica)', desc: 'Registradas desde o início da semana atual.' },
+      { termo: 'Follow-ups (métrica)', desc: 'Contatos com próximo passo vencido.' },
+    ],
+  },
+  {
+    titulo: 'Alerta no Pipeline',
+    cor: 'bg-[#FDF0EE] text-[#C0392B]',
+    itens: [
+      { termo: 'Mapeado', desc: 'Alerta após 7 dias sem contato.' },
+      { termo: 'Acionado', desc: 'Alerta após 5 dias sem contato.' },
+      { termo: 'Reunião', desc: 'Alerta após 3 dias sem contato.' },
+      { termo: 'Follow-up', desc: 'Alerta após 7 dias sem contato.' },
+      { termo: 'Oportunidade', desc: 'Alerta após 14 dias sem contato.' },
+    ],
+  },
+]
+
 export default function NarrativaPage() {
   const { narrativa, updateNarrativa } = useNarrativaStore()
   const { addToast } = useUIStore()
@@ -13,6 +72,7 @@ export default function NarrativaPage() {
   const [editando, setEditando] = useState(false)
   const [draft, setDraft] = useState(narrativa ?? {})
   const [copiado, setCopiado] = useState<number | null>(null)
+  const [glossarioAberto, setGlossarioAberto] = useState(false)
 
   function handleEditar() {
     setDraft(narrativa ?? {})
@@ -38,10 +98,7 @@ export default function NarrativaPage() {
         <p className="text-[12px] text-ink-3 mb-4">Preencha agora — ela guia todas as conversas.</p>
         <Button onClick={handleEditar}>Definir narrativa</Button>
         <div className="pt-8 mt-8 border-t border-[rgba(26,26,24,0.08)]">
-          <button
-            onClick={signOut}
-            className="w-full text-[13px] text-ink-4 py-2 text-center"
-          >
+          <button onClick={signOut} className="w-full text-[13px] text-ink-4 py-2 text-center">
             Sair da conta
           </button>
         </div>
@@ -144,6 +201,37 @@ export default function NarrativaPage() {
             <Button variant="ghost" onClick={() => setEditando(false)}>Cancelar</Button>
           </div>
         )}
+
+        {/* Glossário */}
+        <div className="border border-[rgba(26,26,24,0.10)] rounded-xl overflow-hidden">
+          <button
+            onClick={() => setGlossarioAberto(g => !g)}
+            className="w-full flex items-center justify-between px-3.5 py-3 bg-white active:bg-surface-2"
+          >
+            <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-ink-4">Glossário do app</p>
+            <span className="text-[10px] text-ink-4">{glossarioAberto ? '▲' : '▼'}</span>
+          </button>
+
+          {glossarioAberto && (
+            <div className="divide-y divide-[rgba(26,26,24,0.06)]">
+              {GLOSSARIO.map((grupo) => (
+                <div key={grupo.titulo} className="px-3.5 py-3 bg-white">
+                  <span className={clsx('text-[10px] font-medium px-2 py-0.5 rounded-full mb-2 inline-block', grupo.cor)}>
+                    {grupo.titulo}
+                  </span>
+                  <div className="space-y-2">
+                    {grupo.itens.map((item) => (
+                      <div key={item.termo}>
+                        <p className="text-[12px] font-medium text-ink">{item.termo}</p>
+                        <p className="text-[11px] text-ink-3 leading-relaxed">{item.desc}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         {!editando && (
           <div className="pt-4 border-t border-[rgba(26,26,24,0.08)]">
