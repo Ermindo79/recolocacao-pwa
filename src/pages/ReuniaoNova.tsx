@@ -22,6 +22,12 @@ const TONS: { value: MeetingTone; label: string; className: string; selectedClas
   { value: 'frio',           label: 'Frio',            className: 'bg-[#FDF0EE] text-[#C0392B]',  selectedClass: 'border-[#C0392B]' },
 ]
 
+const amanha = () => {
+  const d = new Date()
+  d.setDate(d.getDate() + 1)
+  return d.toISOString().split('T')[0]
+}
+
 export default function ReuniaoNovaPage() {
   const navigate = useNavigate()
   const [params] = useSearchParams()
@@ -30,10 +36,11 @@ export default function ReuniaoNovaPage() {
   const createReuniao = useCreateReuniao()
 
   const preContatoId = params.get('contato') ?? ''
+  const modoAgendar = params.get('agendar') === 'true'
   const preContato = contatos.find(c => c.id === preContatoId)
 
   const [contatoId, setContatoId] = useState(preContatoId)
-  const [data, setData] = useState(new Date().toISOString().split('T')[0])
+  const [data, setData] = useState(modoAgendar ? amanha() : new Date().toISOString().split('T')[0])
   const [formato, setFormato] = useState<MeetingFormat | ''>('')
   const [tom, setTom] = useState<MeetingTone | ''>('')
   const [conteudo, setConteudo] = useState('')
@@ -57,19 +64,24 @@ export default function ReuniaoNovaPage() {
         proximo_passo_data: proximoPassoData || data,
       })
       const nomeContato = contatos.find(c => c.id === contatoId)?.nome ?? ''
-      addToast(`Interação com ${nomeContato.split(' ')[0]} salva.`)
+      if (modoAgendar) {
+        addToast(`Reunião com ${nomeContato.split(' ')[0]} agendada.`)
+      } else {
+        addToast(`Interação com ${nomeContato.split(' ')[0]} salva.`)
+      }
       navigate(`/contatos/${contatoId}`)
     } catch {
       addToast('Erro ao salvar. Tente novamente.', 'error')
     }
   }
 
+  const titulo = modoAgendar
+    ? preContato ? `Agendar — ${preContato.nome.split(' ')[0]}` : 'Agendar reunião'
+    : preContato ? `Nova interação — ${preContato.nome.split(' ')[0]}` : 'Nova interação'
+
   return (
     <div className="flex flex-col h-[100dvh] max-w-md mx-auto bg-white overflow-hidden">
-      <TopBar
-        title={preContato ? `Nova interação — ${preContato.nome.split(' ')[0]}` : 'Nova interação'}
-        back onBack={() => navigate(-1)}
-      />
+      <TopBar title={titulo} back onBack={() => navigate(-1)} />
 
       <div className="flex-1 overflow-y-auto bg-surface px-4 py-4 space-y-4 pb-28">
 
@@ -94,10 +106,13 @@ export default function ReuniaoNovaPage() {
 
         {/* Data */}
         <div>
-          <label className="text-[12px] font-medium text-ink-3 block mb-1.5">Data</label>
+          <label className="text-[12px] font-medium text-ink-3 block mb-1.5">
+            {modoAgendar ? 'Data da reunião' : 'Data'}
+          </label>
           <input
             type="date"
             value={data}
+            min={modoAgendar ? amanha() : undefined}
             onChange={(e) => setData(e.target.value)}
             className="w-full h-12 rounded-xl border border-[rgba(26,26,24,0.18)] bg-white px-3.5 text-[14px] text-ink outline-none focus:border-accent"
           />
@@ -124,77 +139,103 @@ export default function ReuniaoNovaPage() {
           </div>
         </div>
 
-        {/* Tom */}
-        <div>
-          <label className="text-[12px] font-medium text-ink-3 block mb-1.5">Tom da reunião</label>
-          <div className="grid grid-cols-2 gap-2">
-            {TONS.map(({ value, label, className, selectedClass }) => (
-              <button
-                key={value}
-                onClick={() => setTom(t => t === value ? '' : value)}
-                className={clsx(
-                  'py-2 rounded-[10px] text-[12px] font-medium border-[1.5px] transition-all',
-                  className,
-                  tom === value ? selectedClass : 'border-transparent'
-                )}
-              >
-                {label}
-              </button>
-            ))}
+        {/* Notas — modo agendar */}
+        {modoAgendar && (
+          <div>
+            <label className="text-[12px] font-medium text-ink-3 block mb-1.5">
+              Notas <span className="text-ink-4">(opcional)</span>
+            </label>
+            <textarea
+              value={conteudo}
+              onChange={(e) => setConteudo(e.target.value)}
+              placeholder="Tópicos a cobrir, local, contexto..."
+              rows={3}
+              className="w-full rounded-xl border border-[rgba(26,26,24,0.18)] bg-white px-3.5 py-3 text-[14px] text-ink placeholder:text-ink-4 outline-none focus:border-accent resize-none"
+            />
           </div>
-        </div>
+        )}
 
-        {/* Conteúdo */}
-        <div>
-          <label className="text-[12px] font-medium text-ink-3 block mb-1.5">O que foi dito</label>
-          <textarea
-            value={conteudo}
-            onChange={(e) => setConteudo(e.target.value)}
-            placeholder="Resumo do que rolou: o que foi dito, sinais importantes..."
-            rows={4}
-            className="w-full rounded-xl border border-[rgba(26,26,24,0.18)] bg-white px-3.5 py-3 text-[14px] text-ink placeholder:text-ink-4 outline-none focus:border-accent resize-none"
-          />
-        </div>
+        {/* Aviso modo agendar */}
+        {modoAgendar && (
+          <div className="bg-[#EBF5F0] border border-[rgba(26,107,69,0.15)] rounded-xl px-3.5 py-3">
+            <p className="text-[12px] font-medium text-[#1A6B45]">Ao salvar</p>
+            <p className="text-[11px] text-[#1A6B45]/80 mt-0.5">
+              {preContato?.nome.split(' ')[0] ?? 'O contato'} ficará com calor Agendado até a data da reunião.
+            </p>
+          </div>
+        )}
 
-        {/* Pendências */}
-        <div>
-          <label className="text-[12px] font-medium text-ink-3 block mb-1.5">Pendências (opcional)</label>
-          <input
-            value={pendencias}
-            onChange={(e) => setPendencias(e.target.value)}
-            placeholder="O que ficou para resolver..."
-            className="w-full h-12 rounded-xl border border-[rgba(26,26,24,0.18)] bg-white px-3.5 text-[14px] text-ink placeholder:text-ink-4 outline-none focus:border-accent"
-          />
-        </div>
+        {/* Campos completos — modo interação */}
+        {!modoAgendar && (
+          <>
+            {/* Tom */}
+            <div>
+              <label className="text-[12px] font-medium text-ink-3 block mb-1.5">Tom da reunião</label>
+              <div className="grid grid-cols-2 gap-2">
+                {TONS.map(({ value, label, className, selectedClass }) => (
+                  <button
+                    key={value}
+                    onClick={() => setTom(t => t === value ? '' : value)}
+                    className={clsx(
+                      'py-2 rounded-[10px] text-[12px] font-medium border-[1.5px] transition-all',
+                      className,
+                      tom === value ? selectedClass : 'border-transparent'
+                    )}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-        {/* Próximo passo — OPCIONAL */}
-        <div>
-          <label className="text-[12px] font-medium text-ink-3 block mb-1.5">
-            Próximo passo <span className="text-ink-4">(opcional)</span>
-          </label>
-          <input
-            value={proximoPasso}
-            onChange={(e) => setProximoPasso(e.target.value)}
-            placeholder="Ex: café presencial em SP em 13/04"
-            className="w-full h-12 rounded-xl border border-[rgba(26,26,24,0.18)] bg-white px-3.5 text-[14px] text-ink placeholder:text-ink-4 outline-none focus:border-accent"
-          />
-        </div>
+            <div>
+              <label className="text-[12px] font-medium text-ink-3 block mb-1.5">O que foi dito</label>
+              <textarea
+                value={conteudo}
+                onChange={(e) => setConteudo(e.target.value)}
+                placeholder="Resumo do que rolou: o que foi dito, sinais importantes..."
+                rows={4}
+                className="w-full rounded-xl border border-[rgba(26,26,24,0.18)] bg-white px-3.5 py-3 text-[14px] text-ink placeholder:text-ink-4 outline-none focus:border-accent resize-none"
+              />
+            </div>
 
-        <div>
-          <label className="text-[12px] font-medium text-ink-3 block mb-1.5">
-            Data do próximo passo <span className="text-ink-4">(opcional)</span>
-          </label>
-          <input
-            type="date"
-            value={proximoPassoData}
-            onChange={(e) => setProximoPassoData(e.target.value)}
-            className="w-full h-12 rounded-xl border border-[rgba(26,26,24,0.18)] bg-white px-3.5 text-[14px] text-ink outline-none focus:border-accent"
-          />
-        </div>
+            <div>
+              <label className="text-[12px] font-medium text-ink-3 block mb-1.5">Pendências (opcional)</label>
+              <input
+                value={pendencias}
+                onChange={(e) => setPendencias(e.target.value)}
+                placeholder="O que ficou para resolver..."
+                className="w-full h-12 rounded-xl border border-[rgba(26,26,24,0.18)] bg-white px-3.5 text-[14px] text-ink placeholder:text-ink-4 outline-none focus:border-accent"
+              />
+            </div>
 
+            <div>
+              <label className="text-[12px] font-medium text-ink-3 block mb-1.5">
+                Próximo passo <span className="text-ink-4">(opcional)</span>
+              </label>
+              <input
+                value={proximoPasso}
+                onChange={(e) => setProximoPasso(e.target.value)}
+                placeholder="Ex: café presencial em SP em 13/04"
+                className="w-full h-12 rounded-xl border border-[rgba(26,26,24,0.18)] bg-white px-3.5 text-[14px] text-ink placeholder:text-ink-4 outline-none focus:border-accent"
+              />
+            </div>
+
+            <div>
+              <label className="text-[12px] font-medium text-ink-3 block mb-1.5">
+                Data do próximo passo <span className="text-ink-4">(opcional)</span>
+              </label>
+              <input
+                type="date"
+                value={proximoPassoData}
+                onChange={(e) => setProximoPassoData(e.target.value)}
+                className="w-full h-12 rounded-xl border border-[rgba(26,26,24,0.18)] bg-white px-3.5 text-[14px] text-ink outline-none focus:border-accent"
+              />
+            </div>
+          </>
+        )}
       </div>
 
-      {/* Footer fixo */}
       <div className="px-4 py-3 bg-white border-t border-[rgba(26,26,24,0.08)] pb-[env(safe-area-inset-bottom)]">
         <Button
           onClick={handleSave}
@@ -202,7 +243,7 @@ export default function ReuniaoNovaPage() {
           loading={createReuniao.isPending}
           className="w-full"
         >
-          Salvar interação
+          {modoAgendar ? 'Agendar reunião' : 'Salvar interação'}
         </Button>
       </div>
     </div>

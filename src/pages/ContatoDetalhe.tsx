@@ -104,7 +104,6 @@ export default function ContatoDetalhePage() {
   )
 
   const vencido = contato.proximo_passo_data ? followupVencido(contato.proximo_passo_data) : false
-
   const inputClass = 'w-full h-11 rounded-xl border border-[rgba(26,26,24,0.18)] bg-white px-3.5 text-[14px] text-ink placeholder:text-ink-4 outline-none focus:border-accent'
   const labelClass = 'text-[11px] font-medium text-ink-3 block mb-1'
 
@@ -152,7 +151,6 @@ export default function ContatoDetalhePage() {
 
         <div className="px-4 py-4 space-y-3">
 
-          {/* Formulário de edição */}
           {editando ? (
             <div className="bg-white border border-[rgba(26,26,24,0.10)] rounded-xl px-3.5 py-3 space-y-3">
               <div>
@@ -221,15 +219,20 @@ export default function ContatoDetalhePage() {
                   <svg width="16" height="16" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
                   Registrar
                 </button>
-                <button onClick={() => navigate(`/reuniao/prep/${contato.id}`)}
-                  className="flex items-center justify-center gap-2 bg-accent-lt text-accent rounded-xl py-3 text-[13px] font-medium active:opacity-80">
-                  <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                    <polyline points="14 2 14 8 20 8" /><line x1="8" y1="13" x2="16" y2="13" />
-                  </svg>
-                  Prep
+                <button onClick={() => navigate(`/reuniao/nova?contato=${contato.id}&agendar=true`)}
+                  className="flex items-center justify-center gap-2 bg-[#EBF5F0] text-[#085041] rounded-xl py-3 text-[13px] font-medium active:opacity-80">
+                  <svg width="16" height="16" fill="none" stroke="#085041" strokeWidth="1.8" strokeLinecap="round"><rect x="2" y="3" width="12" height="12" rx="2"/><path d="M8 2v2M4 2v2M2 7h12"/></svg>
+                  Agendar
                 </button>
               </div>
+              <button onClick={() => navigate(`/reuniao/prep/${contato.id}`)}
+                className="flex items-center justify-center gap-2 bg-accent-lt text-accent rounded-xl py-3 text-[13px] font-medium active:opacity-80 w-full">
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" /><line x1="8" y1="13" x2="16" y2="13" />
+                </svg>
+                Prep
+              </button>
 
               {/* Notas */}
               {contato.notas && (
