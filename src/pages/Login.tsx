@@ -101,7 +101,7 @@ export default function LoginPage() {
         </div>
 
         <div className="flex flex-col items-center">
-          <span className="font-serif text-[38px] text-white/95 leading-[1.2] tracking-tight">Catch Up</span>
+          <span className="font-serif text-[38px] text-white/95 leading-[1.2] tracking-tight">Catch up</span>
           <div className="w-12 h-px bg-white/30 my-2.5" />
           <span className="font-serif text-[38px] text-white/95 leading-[1.2] tracking-tight">Executivo</span>
         </div>
