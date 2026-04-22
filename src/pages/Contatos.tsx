@@ -11,10 +11,10 @@ type ViewMode = 'pessoas' | 'categorias'
 
 const CATEGORIAS: { key: ContactType; label: string; agrupar: boolean }[] = [
   { key: 'empresa', label: 'Empresas', agrupar: true },
-  { key: 'consultoria_estrategia', label: 'Consultorias de Estratégia', agrupar: true },
-  { key: 'private_equity', label: 'Private Equity', agrupar: true },
-  { key: 'headhunter', label: 'Headhunters', agrupar: true },
   { key: 'conselho', label: 'Membros de Conselho de Administração', agrupar: false },
+  { key: 'consultoria_estrategia', label: 'Consultorias de Estratégia', agrupar: true },
+  { key: 'private_equity', label: 'Private Equity', agrupar: false },
+  { key: 'headhunter', label: 'Headhunters', agrupar: true },
 ]
 
 export default function ContatosPage() {
