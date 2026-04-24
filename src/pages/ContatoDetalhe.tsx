@@ -5,6 +5,7 @@ import { PageWrapper, TopBar, FAB } from '../components/layout'
 import { Avatar, CalorBadge, TipoBadge, Skeleton, ErrorState, Button } from '../components/ui'
 import { clsx, formatarData, formatarDataCompleta, followupVencido } from '../utils'
 import { contatosService } from '../services/contatos.service'
+import { reunioesService } from '../services/reunioes.service'
 import { useUIStore } from '../stores/ui.store'
 import { useQueryClient } from '@tanstack/react-query'
 import { KEYS } from '../hooks'
@@ -184,7 +185,6 @@ export default function ContatoDetalhePage() {
         </div>
 
         <div className="px-4 py-4 space-y-3">
-
           {editando ? (
             <div className="bg-white border border-[rgba(26,26,24,0.10)] rounded-xl px-3.5 py-3 space-y-3">
               <div>
@@ -221,7 +221,6 @@ export default function ContatoDetalhePage() {
                   className="w-full rounded-xl border border-[rgba(26,26,24,0.18)] bg-white px-3.5 py-3 text-[14px] text-ink placeholder:text-ink-4 outline-none focus:border-accent resize-none" />
               </div>
 
-              {/* Apagar contato */}
               <div className="pt-2 border-t border-[rgba(26,26,24,0.08)]">
                 {!confirmandoApagar ? (
                   <button onClick={() => setConfirmandoApagar(true)}
@@ -249,7 +248,6 @@ export default function ContatoDetalhePage() {
             </div>
           ) : (
             <>
-              {/* Próximo passo */}
               <div className={clsx('rounded-xl px-3.5 py-3 border',
                 vencido ? 'bg-[#FDF5E6] border-[rgba(154,107,26,0.2)]'
                 : contato.proximo_passo ? 'bg-accent-lt border-[rgba(28,61,90,0.12)]'
@@ -280,7 +278,6 @@ export default function ContatoDetalhePage() {
                 )}
               </div>
 
-              {/* Ações rápidas */}
               <div className="grid grid-cols-2 gap-2">
                 <button onClick={() => navigate(`/reuniao/nova?contato=${contato.id}`)}
                   className="flex items-center justify-center gap-2 bg-accent text-white rounded-xl py-3 text-[13px] font-medium active:opacity-80">
@@ -302,7 +299,6 @@ export default function ContatoDetalhePage() {
                 Prep
               </button>
 
-              {/* Notas */}
               {contato.notas && (
                 <div className="bg-white border border-[rgba(26,26,24,0.10)] rounded-xl px-3.5 py-3">
                   <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-ink-4 mb-1.5">Contexto</p>
@@ -312,7 +308,6 @@ export default function ContatoDetalhePage() {
             </>
           )}
 
-          {/* Histórico */}
           <div>
             <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-ink-4 mb-2">Histórico</p>
             {loadingReunioes ? (
@@ -323,7 +318,19 @@ export default function ContatoDetalhePage() {
               </div>
             ) : (
               <div className="bg-white border border-[rgba(26,26,24,0.10)] rounded-xl divide-y divide-[rgba(26,26,24,0.06)]">
-                {reunioes.map((r, i) => <ReuniaoItem key={r.id} reuniao={r} isFirst={i === 0} />)}
+                {reunioes.map((r, i) => (
+                  <ReuniaoItem
+                    key={r.id}
+                    reuniao={r}
+                    isFirst={i === 0}
+                    onDelete={async () => {
+                      await reunioesService.delete(r.id)
+                      await qc.invalidateQueries({ queryKey: KEYS.reunioes(id ?? '') })
+                      await qc.invalidateQueries({ queryKey: KEYS.contato(id ?? '') })
+                      await qc.invalidateQueries({ queryKey: KEYS.contatos })
+                    }}
+                  />
+                ))}
               </div>
             )}
           </div>
@@ -333,36 +340,78 @@ export default function ContatoDetalhePage() {
   )
 }
 
-function ReuniaoItem({ reuniao, isFirst }: { reuniao: Reuniao; isFirst: boolean }) {
+function ReuniaoItem({ reuniao, isFirst, onDelete }: {
+  reuniao: Reuniao
+  isFirst: boolean
+  onDelete: () => Promise<void>
+}) {
   const [expandido, setExpandido] = useState(false)
+  const [confirmando, setConfirmando] = useState(false)
+  const [apagando, setApagando] = useState(false)
   const tom = reuniao.tom ? TOM_CONFIG[reuniao.tom] : null
   const temTextoLongo = reuniao.conteudo && reuniao.conteudo.length > 120
 
+  async function handleDelete(e: React.MouseEvent) {
+    e.stopPropagation()
+    if (!confirmando) { setConfirmando(true); return }
+    setApagando(true)
+    try {
+      await onDelete()
+    } catch {
+      setApagando(false)
+      setConfirmando(false)
+    }
+  }
+
   return (
-    <button onClick={() => setExpandido(e => !e)} className="w-full text-left px-3.5 py-3 active:bg-surface-2 transition-colors">
-      <div className="flex items-start gap-2.5">
-        <div className={clsx('w-2 h-2 rounded-full mt-1.5 shrink-0', isFirst ? 'bg-accent' : 'bg-surface-3')} />
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between gap-2 mb-0.5">
-            <span className="text-[12px] font-medium text-ink">
-              {reuniao.formato ? FORMATO_LABEL[reuniao.formato] : 'Reunião'}
-              {tom && <span className={clsx('ml-1.5 font-normal', tom.className)}>· {tom.label}</span>}
-            </span>
-            <div className="flex items-center gap-1.5 shrink-0">
-              <span className="text-[10px] text-ink-4">{formatarData(reuniao.data)}</span>
-              {temTextoLongo && <span className="text-[10px] text-ink-4">{expandido ? '▲' : '▼'}</span>}
+    <div className="px-3.5 py-3">
+      <button onClick={() => { setExpandido(e => !e); setConfirmando(false) }}
+        className="w-full text-left">
+        <div className="flex items-start gap-2.5">
+          <div className={clsx('w-2 h-2 rounded-full mt-1.5 shrink-0', isFirst ? 'bg-accent' : 'bg-surface-3')} />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between gap-2 mb-0.5">
+              <span className="text-[12px] font-medium text-ink">
+                {reuniao.formato ? FORMATO_LABEL[reuniao.formato] : 'Reunião'}
+                {tom && <span className={clsx('ml-1.5 font-normal', tom.className)}>· {tom.label}</span>}
+              </span>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span className="text-[10px] text-ink-4">{formatarData(reuniao.data)}</span>
+                <span className="text-[10px] text-ink-4">{expandido ? '▲' : '▼'}</span>
+              </div>
             </div>
+            {reuniao.conteudo && (
+              <p className={clsx('text-[12px] text-ink-2 leading-relaxed', !expandido && 'line-clamp-3')}>
+                {reuniao.conteudo}
+              </p>
+            )}
+            {reuniao.proximo_passo && (
+              <p className="text-[11px] text-ink-3 mt-1">→ {reuniao.proximo_passo}</p>
+            )}
           </div>
-          {reuniao.conteudo && (
-            <p className={clsx('text-[12px] text-ink-2 leading-relaxed', !expandido && 'line-clamp-3')}>
-              {reuniao.conteudo}
-            </p>
-          )}
-          {reuniao.proximo_passo && (
-            <p className="text-[11px] text-ink-3 mt-1">→ {reuniao.proximo_passo}</p>
+        </div>
+      </button>
+
+      {expandido && (
+        <div className="mt-2 pt-2 border-t border-[rgba(26,26,24,0.06)] flex items-center justify-end">
+          {!confirmando ? (
+            <button onClick={handleDelete}
+              className="flex items-center gap-1.5 text-[11px] text-ink-3 py-1 px-2 rounded-lg active:opacity-60">
+              <TrashIcon size={12} />
+              Apagar
+            </button>
+          ) : (
+            <div className="flex items-center gap-2">
+              <button onClick={(e) => { e.stopPropagation(); setConfirmando(false) }}
+                className="text-[11px] text-ink-3 px-2 py-1">Cancelar</button>
+              <button onClick={handleDelete} disabled={apagando}
+                className="text-[11px] font-medium text-white bg-[#C0392B] px-3 py-1 rounded-lg active:opacity-80 disabled:opacity-50">
+                {apagando ? '...' : 'Confirmar'}
+              </button>
+            </div>
           )}
         </div>
-      </div>
-    </button>
+      )}
+    </div>
   )
 }
