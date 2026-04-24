@@ -29,9 +29,15 @@ const TIPOS: { value: ContactType; label: string }[] = [
   { value: 'empresa', label: 'Empresa' },
   { value: 'consultoria_estrategia', label: 'Consultoria' },
   { value: 'private_equity', label: 'Private Equity' },
-  { value: 'conselho', label: 'Conselho' },
+  { value: 'conselho', label: 'Independente' },
   { value: 'headhunter', label: 'Headhunter' },
 ]
+
+const TrashIcon = ({ size = 14 }: { size?: number }) => (
+  <svg width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+  </svg>
+)
 
 export default function ContatoDetalhePage() {
   const { id } = useParams<{ id: string }>()
@@ -79,6 +85,18 @@ export default function ContatoDetalhePage() {
       addToast('Erro ao salvar. Tente novamente.', 'error')
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function apagarProximoPasso() {
+    if (!contato) return
+    try {
+      await contatosService.update(contato.id, { proximo_passo: null, proximo_passo_data: null })
+      await qc.invalidateQueries({ queryKey: KEYS.contato(contato.id) })
+      await qc.invalidateQueries({ queryKey: KEYS.contatos })
+      addToast('Próximo passo apagado.')
+    } catch {
+      addToast('Erro ao apagar. Tente novamente.', 'error')
     }
   }
 
@@ -195,9 +213,17 @@ export default function ContatoDetalhePage() {
                 : contato.proximo_passo ? 'bg-accent-lt border-[rgba(28,61,90,0.12)]'
                 : 'bg-surface-2 border-[rgba(26,26,24,0.08)]'
               )}>
-                <p className={clsx('text-[10px] font-medium uppercase tracking-[0.08em] mb-1',
-                  vencido ? 'text-[#9A6B1A]' : contato.proximo_passo ? 'text-accent' : 'text-ink-4'
-                )}>Próximo passo</p>
+                <div className="flex items-center justify-between mb-1">
+                  <p className={clsx('text-[10px] font-medium uppercase tracking-[0.08em]',
+                    vencido ? 'text-[#9A6B1A]' : contato.proximo_passo ? 'text-accent' : 'text-ink-4'
+                  )}>Próximo passo</p>
+                  {contato.proximo_passo && (
+                    <button onClick={apagarProximoPasso}
+                      className={clsx('p-1 rounded-lg active:opacity-60', vencido ? 'text-[#9A6B1A]' : 'text-accent')}>
+                      <TrashIcon size={13} />
+                    </button>
+                  )}
+                </div>
                 {contato.proximo_passo ? (
                   <>
                     <p className={clsx('text-[14px] font-medium', vencido ? 'text-[#9A6B1A]' : 'text-ink')}>{contato.proximo_passo}</p>
