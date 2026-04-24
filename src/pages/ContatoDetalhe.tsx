@@ -48,6 +48,8 @@ export default function ContatoDetalhePage() {
   const { data: reunioes = [], isLoading: loadingReunioes } = useReunioes(id ?? '')
   const [editando, setEditando] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [confirmandoApagar, setConfirmandoApagar] = useState(false)
+  const [apagando, setApagando] = useState(false)
   const [draft, setDraft] = useState<Record<string, string>>({})
 
   function abrirEdicao() {
@@ -100,6 +102,20 @@ export default function ContatoDetalhePage() {
     }
   }
 
+  async function apagarContato() {
+    if (!contato) return
+    setApagando(true)
+    try {
+      await contatosService.delete(contato.id)
+      await qc.invalidateQueries({ queryKey: KEYS.contatos })
+      addToast('Contato apagado.')
+      navigate('/contatos')
+    } catch {
+      addToast('Erro ao apagar. Tente novamente.', 'error')
+      setApagando(false)
+    }
+  }
+
   if (isLoading) return (
     <div className="flex flex-col h-[100dvh] max-w-md mx-auto">
       <TopBar back onBack={() => navigate(-1)} />
@@ -132,7 +148,7 @@ export default function ContatoDetalhePage() {
         right={
           editando ? (
             <div className="flex gap-2">
-              <button onClick={() => setEditando(false)} className="text-[12px] text-ink-3 px-3 py-1.5">Cancelar</button>
+              <button onClick={() => { setEditando(false); setConfirmandoApagar(false) }} className="text-[12px] text-ink-3 px-3 py-1.5">Cancelar</button>
               <Button size="sm" onClick={salvarEdicao} loading={saving}>Salvar</Button>
             </div>
           ) : (
@@ -203,6 +219,32 @@ export default function ContatoDetalhePage() {
                 <textarea value={draft.notas} onChange={e => setDraft(d => ({ ...d, notas: e.target.value }))} rows={3}
                   placeholder="Informações importantes..."
                   className="w-full rounded-xl border border-[rgba(26,26,24,0.18)] bg-white px-3.5 py-3 text-[14px] text-ink placeholder:text-ink-4 outline-none focus:border-accent resize-none" />
+              </div>
+
+              {/* Apagar contato */}
+              <div className="pt-2 border-t border-[rgba(26,26,24,0.08)]">
+                {!confirmandoApagar ? (
+                  <button onClick={() => setConfirmandoApagar(true)}
+                    className="flex items-center gap-2 text-[12px] font-medium text-[#C0392B] py-2 active:opacity-60">
+                    <TrashIcon size={13} />
+                    Apagar contato
+                  </button>
+                ) : (
+                  <div className="bg-[#FDF0EE] border border-[rgba(192,57,43,0.15)] rounded-xl px-3.5 py-3">
+                    <p className="text-[12px] font-medium text-[#C0392B] mb-1">Apagar {contato.nome.split(' ')[0]}?</p>
+                    <p className="text-[11px] text-[#C0392B]/70 mb-3">Esta ação não pode ser desfeita. Todo o histórico será perdido.</p>
+                    <div className="flex gap-2">
+                      <button onClick={() => setConfirmandoApagar(false)}
+                        className="flex-1 py-2 rounded-lg text-[12px] font-medium text-ink-3 bg-white border border-[rgba(26,26,24,0.12)] active:opacity-60">
+                        Cancelar
+                      </button>
+                      <button onClick={apagarContato} disabled={apagando}
+                        className="flex-1 py-2 rounded-lg text-[12px] font-medium text-white bg-[#C0392B] active:opacity-80 disabled:opacity-50">
+                        {apagando ? 'Apagando...' : 'Confirmar'}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ) : (

@@ -58,4 +58,10 @@ export const contatosService = {
     const { error } = await supabase.from('contatos').update({ arquivado: true }).eq('id', id)
     if (error) throw error
   },
+
+  async delete(id: string): Promise<void> {
+    if (USE_MOCK) return
+    const { error } = await supabase.from('contatos').delete().eq('id', id)
+    if (error) throw error
+  },
 }
