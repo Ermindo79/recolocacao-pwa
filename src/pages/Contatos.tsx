@@ -179,6 +179,7 @@ function EmpresasGroup({ contatos, expanded, onToggle, onNavigate }: {
     <div className="space-y-2">
       {porEmpresa.map(([empresa, pessoas]) => {
         const isOpen = expanded === empresa
+        const temMaisDeUm = pessoas.length > 1
         return (
           <div key={empresa} className="bg-white border border-[rgba(26,26,24,0.10)] rounded-xl overflow-hidden">
             <button
@@ -207,10 +208,15 @@ function EmpresasGroup({ contatos, expanded, onToggle, onNavigate }: {
                   >
                     <Avatar nome={c.nome} size="sm" calor={c.calor} pipeline={c.pipeline_stage} />
                     <div className="flex-1 min-w-0 text-left">
-                      <p className="text-[12px] font-medium text-ink truncate">{c.nome}</p>
-                      <p className="text-[10px] text-ink-3 mt-0.5">
-                        {c.cargo ?? ''}
-                      </p>
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-[12px] font-medium text-ink truncate">{c.nome}</p>
+                        {temMaisDeUm && c.contato_primario && (
+                          <span className="text-[9px] font-medium bg-accent-lt text-accent px-1.5 py-0.5 rounded-full shrink-0">
+                            Principal
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-ink-3 mt-0.5">{c.cargo ?? ''}</p>
                     </div>
                     <CalorBadge calor={c.calor ?? 'sem_contato'} />
                   </button>
