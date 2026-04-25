@@ -14,7 +14,7 @@ interface Evento {
   contatoId: string
   contatoNome: string
   data: string
-  formato: MeetingFormat
+  formato: MeetingFormat | 'erro'
   descricao: string
 }
 
@@ -24,9 +24,19 @@ const FORMATO_COR: Record<string, { bg: string; text: string; dot: string; label
   video:      { bg: 'bg-[#EEEDFE]', text: 'text-[#3C3489]', dot: 'bg-[#7F77DD]', label: 'Vídeo' },
   cafe:       { bg: 'bg-[#EAF3DE]', text: 'text-[#27500A]', dot: 'bg-[#639922]', label: 'Café' },
   presencial: { bg: 'bg-[#EAF3DE]', text: 'text-[#27500A]', dot: 'bg-[#639922]', label: 'Presencial' },
+  erro:       { bg: 'bg-[#FDF0EE]', text: 'text-[#C0392B]', dot: 'bg-[#C0392B]', label: 'ERRO' },
 }
 
 const DIAS_SEMANA = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
+
+function detectarFormato(texto: string): MeetingFormat | 'erro' {
+  const t = texto.toLowerCase()
+  if (/caf[eé]|presencial|almo[cç]o|jantar/.test(t)) return 'cafe'
+  if (/liga[cç][aã]o|ligar|telefone/.test(t)) return 'ligacao'
+  if (/v[ií]deo|video|call|zoom|teams|meet/.test(t)) return 'video'
+  if (/mensagem|email|e-mail|whatsapp|linkedin/.test(t)) return 'mensagem'
+  return 'erro'
+}
 
 export default function CalendarioPage() {
   const navigate = useNavigate()
@@ -35,7 +45,6 @@ export default function CalendarioPage() {
   const [diaSelecionado, setDiaSelecionado] = useState(new Date())
   const [showNovoEvento, setShowNovoEvento] = useState(false)
 
-  // Gera eventos a partir dos próximos passos dos contatos
   const eventos: Evento[] = useMemo(() => {
     return contatos
       .filter(c => c.proximo_passo && c.proximo_passo_data)
@@ -44,7 +53,7 @@ export default function CalendarioPage() {
         contatoId: c.id,
         contatoNome: c.nome,
         data: c.proximo_passo_data!,
-        formato: 'presencial' as MeetingFormat,
+        formato: detectarFormato(c.proximo_passo!),
         descricao: c.proximo_passo!,
       }))
   }, [contatos])
@@ -76,7 +85,6 @@ export default function CalendarioPage() {
 
   return (
     <PageWrapper>
-      {/* Header */}
       <div className="px-4 pt-5 pb-3 bg-white border-b border-[rgba(26,26,24,0.06)]">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-[22px] font-medium text-ink">Calendário</h1>
@@ -99,14 +107,12 @@ export default function CalendarioPage() {
           </div>
         </div>
 
-        {/* Dias da semana */}
         <div className="grid grid-cols-7 mb-1">
           {DIAS_SEMANA.map((d, i) => (
             <div key={i} className="text-center text-[11px] font-medium text-ink-4 py-1">{d}</div>
           ))}
         </div>
 
-        {/* Grid de dias */}
         <div className="grid grid-cols-7 gap-y-1">
           {diasDoMes.map((dia, i) => {
             if (!dia) return <div key={`v${i}`} />
@@ -146,7 +152,6 @@ export default function CalendarioPage() {
         </div>
       </div>
 
-      {/* Eventos do dia selecionado */}
       <div className="px-4 py-4 pb-24">
         <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-ink-4 mb-3">
           {format(diaSelecionado, "EEEE, d 'de' MMMM", { locale: ptBR })}
@@ -188,12 +193,12 @@ export default function CalendarioPage() {
         )}
       </div>
 
-      {/* Legenda */}
       <div className="px-4 pb-4 flex gap-3 flex-wrap">
         {[
           { label: 'Ligação / Mensagem', dot: 'bg-[#378ADD]' },
           { label: 'Vídeo', dot: 'bg-[#7F77DD]' },
           { label: 'Presencial / Café', dot: 'bg-[#639922]' },
+          { label: 'Formato não identificado', dot: 'bg-[#C0392B]' },
         ].map(({ label, dot }) => (
           <div key={label} className="flex items-center gap-1.5">
             <div className={clsx('w-2 h-2 rounded-full', dot)} />
@@ -202,7 +207,6 @@ export default function CalendarioPage() {
         ))}
       </div>
 
-      {/* Modal novo evento */}
       {showNovoEvento && (
         <NovoEventoModal
           data={diaSelecionado}
@@ -306,5 +310,3 @@ function NovoEventoModal({ data, contatos, onClose, onSave }: {
     </div>
   )
 }
-
-
