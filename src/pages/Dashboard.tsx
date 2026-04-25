@@ -19,7 +19,6 @@ export default function DashboardPage() {
 
   return (
     <PageWrapper>
-      {/* Header */}
       <div className="px-4 pt-5 pb-3 bg-white border-b border-[rgba(26,26,24,0.06)]">
         <p className="text-[11px] font-medium tracking-[0.08em] uppercase text-ink-4 mb-0.5">
           {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
@@ -37,7 +36,6 @@ export default function DashboardPage() {
       </div>
 
       <div className="px-4 py-4 space-y-5 pb-24">
-        {/* Métricas */}
         <div>
           <SectionHeader label="Esta semana" />
           {isLoading ? (
@@ -46,24 +44,13 @@ export default function DashboardPage() {
             </div>
           ) : error ? null : data ? (
             <div className="grid grid-cols-3 gap-2">
-              <MetricCard
-                value={data.metricas.contatos_ativos}
-                label="Contatos na base"
-              />
-              <MetricCard
-                value={data.metricas.reunioes_semana}
-                label="Reuniões"
-              />
-              <MetricCard
-                value={data.metricas.followups_pendentes}
-                label="Follow-ups"
-                alert={data.metricas.followups_pendentes > 0}
-              />
+              <MetricCard value={data.metricas.contatos_ativos} label="Contatos na base" />
+              <MetricCard value={data.metricas.reunioes_agendadas} label="Reuniões" />
+              <MetricCard value={data.metricas.followups_agendados} label="Follow-ups" alert={data.metricas.followups_agendados > 0} />
             </div>
           ) : null}
         </div>
 
-        {/* Follow-ups vencidos */}
         {isLoading ? (
           <div>
             <SectionHeader label="Atenção" />
@@ -90,7 +77,6 @@ export default function DashboardPage() {
           </div>
         ) : null}
 
-        {/* Reuniões próximas */}
         {data && data.reunioes_proximas.length > 0 && (
           <div>
             <SectionHeader label="Próximos 7 dias" count={data.reunioes_proximas.length} />
@@ -126,7 +112,6 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Silêncios preocupantes */}
         {data && data.contatos_frios.length > 0 && (
           <div>
             <SectionHeader label="Silêncios" count={data.contatos_frios.length} />
@@ -138,7 +123,6 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Empty state dia 1 */}
         {data && !isLoading &&
           data.followups_vencidos.length === 0 &&
           data.reunioes_proximas.length === 0 &&
@@ -158,13 +142,11 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* FAB */}
       <FAB onClick={() => navigate('/reuniao/nova')} label="Registrar reunião" />
     </PageWrapper>
   )
 }
 
-// ─── Metric card ──────────────────────────────────────────────────────────────
 function MetricCard({ value, label, alert }: { value: number; label: string; alert?: boolean }) {
   return (
     <div className="bg-surface-2 rounded-xl p-3">

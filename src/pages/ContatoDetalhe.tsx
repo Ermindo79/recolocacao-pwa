@@ -9,7 +9,7 @@ import { reunioesService } from '../services/reunioes.service'
 import { useUIStore } from '../stores/ui.store'
 import { useQueryClient } from '@tanstack/react-query'
 import { KEYS } from '../hooks'
-import type { Reuniao, ContactType } from '../types'
+import type { Reuniao, ContactType, MeetingFormat, MeetingTone } from '../types'
 
 const TOM_CONFIG = {
   muito_positivo: { label: 'Muito positivo', className: 'text-[#1A6B45]' },
@@ -26,6 +26,21 @@ const FORMATO_LABEL = {
   presencial: 'Presencial',
 }
 
+const FORMATOS: { value: MeetingFormat; label: string }[] = [
+  { value: 'ligacao', label: 'Ligação' },
+  { value: 'cafe', label: 'Café' },
+  { value: 'video', label: 'Vídeo' },
+  { value: 'mensagem', label: 'Mensagem' },
+  { value: 'presencial', label: 'Presencial' },
+]
+
+const TONS: { value: MeetingTone; label: string; className: string; selectedClass: string }[] = [
+  { value: 'muito_positivo', label: 'Muito positivo', className: 'bg-[#EBF5F0] text-[#1A6B45]', selectedClass: 'border-[#1A6B45]' },
+  { value: 'aberto',         label: 'Aberto',          className: 'bg-accent-lt text-accent',     selectedClass: 'border-accent' },
+  { value: 'neutro',         label: 'Neutro',          className: 'bg-surface-2 text-ink-3',      selectedClass: 'border-ink-3' },
+  { value: 'frio',           label: 'Frio',            className: 'bg-[#FDF0EE] text-[#C0392B]',  selectedClass: 'border-[#C0392B]' },
+]
+
 const TIPOS: { value: ContactType; label: string }[] = [
   { value: 'empresa', label: 'Empresa' },
   { value: 'consultoria_estrategia', label: 'Consultoria' },
@@ -37,6 +52,13 @@ const TIPOS: { value: ContactType; label: string }[] = [
 const TrashIcon = ({ size = 14 }: { size?: number }) => (
   <svg width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
     <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+  </svg>
+)
+
+const EditIcon = ({ size = 14 }: { size?: number }) => (
+  <svg width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
   </svg>
 )
 
@@ -329,6 +351,10 @@ export default function ContatoDetalhePage() {
                       await qc.invalidateQueries({ queryKey: KEYS.contato(id ?? '') })
                       await qc.invalidateQueries({ queryKey: KEYS.contatos })
                     }}
+                    onUpdate={async (payload) => {
+                      await reunioesService.update(r.id, payload)
+                      await qc.invalidateQueries({ queryKey: KEYS.reunioes(id ?? '') })
+                    }}
                   />
                 ))}
               </div>
@@ -340,16 +366,51 @@ export default function ContatoDetalhePage() {
   )
 }
 
-function ReuniaoItem({ reuniao, isFirst, onDelete }: {
+function ReuniaoItem({ reuniao, isFirst, onDelete, onUpdate }: {
   reuniao: Reuniao
   isFirst: boolean
   onDelete: () => Promise<void>
+  onUpdate: (payload: Partial<Reuniao>) => Promise<void>
 }) {
   const [expandido, setExpandido] = useState(false)
   const [confirmando, setConfirmando] = useState(false)
   const [apagando, setApagando] = useState(false)
+  const [editando, setEditando] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [draftData, setDraftData] = useState(reuniao.data?.split('T')[0] ?? '')
+  const [draftFormato, setDraftFormato] = useState<MeetingFormat | ''>(reuniao.formato ?? '')
+  const [draftTom, setDraftTom] = useState<MeetingTone | ''>(reuniao.tom ?? '')
+  const [draftConteudo, setDraftConteudo] = useState(reuniao.conteudo ?? '')
+
   const tom = reuniao.tom ? TOM_CONFIG[reuniao.tom] : null
-  const temTextoLongo = reuniao.conteudo && reuniao.conteudo.length > 120
+
+  function abrirEdicao(e: React.MouseEvent) {
+    e.stopPropagation()
+    setDraftData(reuniao.data?.split('T')[0] ?? '')
+    setDraftFormato(reuniao.formato ?? '')
+    setDraftTom(reuniao.tom ?? '')
+    setDraftConteudo(reuniao.conteudo ?? '')
+    setEditando(true)
+    setConfirmando(false)
+  }
+
+  async function salvarEdicao(e: React.MouseEvent) {
+    e.stopPropagation()
+    setSaving(true)
+    try {
+      await onUpdate({
+        data: draftData,
+        formato: draftFormato || undefined,
+        tom: draftTom || undefined,
+        conteudo: draftConteudo || undefined,
+      })
+      setEditando(false)
+    } catch {
+      // silencioso
+    } finally {
+      setSaving(false)
+    }
+  }
 
   async function handleDelete(e: React.MouseEvent) {
     e.stopPropagation()
@@ -363,53 +424,113 @@ function ReuniaoItem({ reuniao, isFirst, onDelete }: {
     }
   }
 
+  const inputClass = 'w-full h-10 rounded-xl border border-[rgba(26,26,24,0.18)] bg-white px-3 text-[13px] text-ink outline-none focus:border-accent'
+  const labelClass = 'text-[11px] font-medium text-ink-3 block mb-1'
+
   return (
     <div className="px-3.5 py-3">
-      <button onClick={() => { setExpandido(e => !e); setConfirmando(false) }}
-        className="w-full text-left">
-        <div className="flex items-start gap-2.5">
-          <div className={clsx('w-2 h-2 rounded-full mt-1.5 shrink-0', isFirst ? 'bg-accent' : 'bg-surface-3')} />
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between gap-2 mb-0.5">
-              <span className="text-[12px] font-medium text-ink">
-                {reuniao.formato ? FORMATO_LABEL[reuniao.formato] : 'Reunião'}
-                {tom && <span className={clsx('ml-1.5 font-normal', tom.className)}>· {tom.label}</span>}
-              </span>
-              <div className="flex items-center gap-1.5 shrink-0">
-                <span className="text-[10px] text-ink-4">{formatarData(reuniao.data)}</span>
-                <span className="text-[10px] text-ink-4">{expandido ? '▲' : '▼'}</span>
+      {!editando ? (
+        <>
+          <button onClick={() => { setExpandido(e => !e); setConfirmando(false) }} className="w-full text-left">
+            <div className="flex items-start gap-2.5">
+              <div className={clsx('w-2 h-2 rounded-full mt-1.5 shrink-0', isFirst ? 'bg-accent' : 'bg-surface-3')} />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2 mb-0.5">
+                  <span className="text-[12px] font-medium text-ink">
+                    {reuniao.formato ? FORMATO_LABEL[reuniao.formato] : 'Reunião'}
+                    {tom && <span className={clsx('ml-1.5 font-normal', tom.className)}>· {tom.label}</span>}
+                  </span>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="text-[10px] text-ink-4">{formatarData(reuniao.data)}</span>
+                    <span className="text-[10px] text-ink-4">{expandido ? '▲' : '▼'}</span>
+                  </div>
+                </div>
+                {reuniao.conteudo && (
+                  <p className={clsx('text-[12px] text-ink-2 leading-relaxed', !expandido && 'line-clamp-3')}>
+                    {reuniao.conteudo}
+                  </p>
+                )}
+                {reuniao.proximo_passo && (
+                  <p className="text-[11px] text-ink-3 mt-1">→ {reuniao.proximo_passo}</p>
+                )}
               </div>
             </div>
-            {reuniao.conteudo && (
-              <p className={clsx('text-[12px] text-ink-2 leading-relaxed', !expandido && 'line-clamp-3')}>
-                {reuniao.conteudo}
-              </p>
-            )}
-            {reuniao.proximo_passo && (
-              <p className="text-[11px] text-ink-3 mt-1">→ {reuniao.proximo_passo}</p>
-            )}
-          </div>
-        </div>
-      </button>
+          </button>
 
-      {expandido && (
-        <div className="mt-2 pt-2 border-t border-[rgba(26,26,24,0.06)] flex items-center justify-end">
-          {!confirmando ? (
-            <button onClick={handleDelete}
-              className="flex items-center gap-1.5 text-[11px] text-ink-3 py-1 px-2 rounded-lg active:opacity-60">
-              <TrashIcon size={12} />
-              Apagar
-            </button>
-          ) : (
-            <div className="flex items-center gap-2">
-              <button onClick={(e) => { e.stopPropagation(); setConfirmando(false) }}
-                className="text-[11px] text-ink-3 px-2 py-1">Cancelar</button>
-              <button onClick={handleDelete} disabled={apagando}
-                className="text-[11px] font-medium text-white bg-[#C0392B] px-3 py-1 rounded-lg active:opacity-80 disabled:opacity-50">
-                {apagando ? '...' : 'Confirmar'}
+          {expandido && (
+            <div className="mt-2 pt-2 border-t border-[rgba(26,26,24,0.06)] flex items-center justify-end gap-2">
+              <button onClick={abrirEdicao}
+                className="flex items-center gap-1.5 text-[11px] font-medium text-accent bg-accent-lt py-1 px-2.5 rounded-lg active:opacity-60">
+                <EditIcon size={12} />
+                Editar
               </button>
+              {!confirmando ? (
+                <button onClick={handleDelete}
+                  className="flex items-center gap-1.5 text-[11px] text-ink-3 py-1 px-2 rounded-lg active:opacity-60">
+                  <TrashIcon size={12} />
+                  Apagar
+                </button>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <button onClick={(e) => { e.stopPropagation(); setConfirmando(false) }}
+                    className="text-[11px] text-ink-3 px-2 py-1">Cancelar</button>
+                  <button onClick={handleDelete} disabled={apagando}
+                    className="text-[11px] font-medium text-white bg-[#C0392B] px-3 py-1 rounded-lg active:opacity-80 disabled:opacity-50">
+                    {apagando ? '...' : 'Confirmar'}
+                  </button>
+                </div>
+              )}
             </div>
           )}
+        </>
+      ) : (
+        <div className="space-y-3">
+          <div>
+            <label className={labelClass}>Data</label>
+            <input type="date" value={draftData} onChange={e => setDraftData(e.target.value)} className={inputClass} />
+          </div>
+          <div>
+            <label className={labelClass}>Formato</label>
+            <div className="flex gap-2 flex-wrap">
+              {FORMATOS.map(({ value, label }) => (
+                <button key={value}
+                  onClick={e => { e.stopPropagation(); setDraftFormato(f => f === value ? '' : value) }}
+                  className={clsx('px-3 py-1.5 rounded-lg text-[11px] font-medium border transition-all',
+                    draftFormato === value ? 'bg-accent text-white border-accent' : 'bg-white text-ink-2 border-[rgba(26,26,24,0.18)]')}>
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className={labelClass}>Tom</label>
+            <div className="grid grid-cols-2 gap-2">
+              {TONS.map(({ value, label, className, selectedClass }) => (
+                <button key={value}
+                  onClick={e => { e.stopPropagation(); setDraftTom(t => t === value ? '' : value) }}
+                  className={clsx('py-2 rounded-[10px] text-[11px] font-medium border-[1.5px] transition-all',
+                    className, draftTom === value ? selectedClass : 'border-transparent')}>
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className={labelClass}>O que foi dito</label>
+            <textarea value={draftConteudo} onChange={e => setDraftConteudo(e.target.value)} rows={4}
+              onClick={e => e.stopPropagation()}
+              className="w-full rounded-xl border border-[rgba(26,26,24,0.18)] bg-white px-3 py-2.5 text-[13px] text-ink placeholder:text-ink-4 outline-none focus:border-accent resize-none" />
+          </div>
+          <div className="flex gap-2 pt-1">
+            <button onClick={e => { e.stopPropagation(); setEditando(false) }}
+              className="flex-1 py-2.5 rounded-xl border border-[rgba(26,26,24,0.18)] text-[12px] font-medium text-ink-3">
+              Cancelar
+            </button>
+            <button onClick={salvarEdicao} disabled={saving}
+              className="flex-1 py-2.5 rounded-xl bg-accent text-white text-[12px] font-medium disabled:opacity-50">
+              {saving ? 'Salvando...' : 'Salvar'}
+            </button>
+          </div>
         </div>
       )}
     </div>
