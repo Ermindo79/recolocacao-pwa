@@ -5,6 +5,7 @@ import { TopBar } from '../components/layout'
 import { Button } from '../components/ui'
 import { useUIStore } from '../stores/ui.store'
 import { clsx } from '../utils'
+import { contatosService } from '../services/contatos.service'
 import type { MeetingFormat, MeetingTone } from '../types'
 
 const FORMATOS: { value: MeetingFormat; label: string }[] = [
@@ -63,6 +64,11 @@ export default function ReuniaoNovaPage() {
         proximo_passo: proximoPasso.trim() || '',
         proximo_passo_data: proximoPassoData || data,
       })
+
+      if (modoAgendar) {
+        await contatosService.updateStage(contatoId, 'reuniao')
+      }
+
       const nomeContato = contatos.find(c => c.id === contatoId)?.nome ?? ''
       if (modoAgendar) {
         addToast(`Reunião com ${nomeContato.split(' ')[0]} agendada.`)
@@ -85,7 +91,6 @@ export default function ReuniaoNovaPage() {
 
       <div className="flex-1 overflow-y-auto bg-surface px-4 py-4 space-y-4 pb-28">
 
-        {/* Contato */}
         {!preContatoId && (
           <div>
             <label className="text-[12px] font-medium text-ink-3 block mb-1.5">
@@ -104,7 +109,6 @@ export default function ReuniaoNovaPage() {
           </div>
         )}
 
-        {/* Data */}
         <div>
           <label className="text-[12px] font-medium text-ink-3 block mb-1.5">
             {modoAgendar ? 'Data da reunião' : 'Data'}
@@ -118,7 +122,6 @@ export default function ReuniaoNovaPage() {
           />
         </div>
 
-        {/* Formato */}
         <div>
           <label className="text-[12px] font-medium text-ink-3 block mb-1.5">Formato</label>
           <div className="flex gap-2 flex-wrap">
@@ -139,7 +142,6 @@ export default function ReuniaoNovaPage() {
           </div>
         </div>
 
-        {/* Notas — modo agendar */}
         {modoAgendar && (
           <div>
             <label className="text-[12px] font-medium text-ink-3 block mb-1.5">
@@ -155,20 +157,17 @@ export default function ReuniaoNovaPage() {
           </div>
         )}
 
-        {/* Aviso modo agendar */}
         {modoAgendar && (
           <div className="bg-[#EBF5F0] border border-[rgba(26,107,69,0.15)] rounded-xl px-3.5 py-3">
             <p className="text-[12px] font-medium text-[#1A6B45]">Ao salvar</p>
             <p className="text-[11px] text-[#1A6B45]/80 mt-0.5">
-              {preContato?.nome.split(' ')[0] ?? 'O contato'} ficará com calor Agendado até a data da reunião.
+              {preContato?.nome.split(' ')[0] ?? 'O contato'} ficará com calor Agendado e será movido para o stage Reunião no pipeline.
             </p>
           </div>
         )}
 
-        {/* Campos completos — modo interação */}
         {!modoAgendar && (
           <>
-            {/* Tom */}
             <div>
               <label className="text-[12px] font-medium text-ink-3 block mb-1.5">Tom da reunião</label>
               <div className="grid grid-cols-2 gap-2">
