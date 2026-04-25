@@ -83,6 +83,8 @@ export interface DashboardData {
     reunioes_semana: number
     followups_pendentes: number
     dias_em_processo: number
+    reunioes_agendadas: number
+    followups_agendados: number
   }
 }
 

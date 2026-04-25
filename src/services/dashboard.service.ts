@@ -53,12 +53,33 @@ export const dashboardService = {
         .eq('arquivado', false)
         .in('pipeline_stage', ['acionado', 'reuniao', 'followup', 'oportunidade'])
 
-      const inicioSemana = new Date()
-      inicioSemana.setDate(inicioSemana.getDate() - inicioSemana.getDay())
-      const { count: reunioesSemana } = await supabase
+      // Reuniões agendadas com data futura
+      const { count: reunioesAgendadas } = await supabase
         .from('reunioes')
         .select('*', { count: 'exact', head: true })
-        .gte('data', inicioSemana.toISOString())
+        .gte('data', agora)
+
+      // IDs de contatos com reunião futura (para excluir dos follow-ups)
+      const { data: contatosComReuniaoFutura } = await supabase
+        .from('reunioes')
+        .select('contato_id')
+        .gte('data', agora)
+
+      const idsComReuniao = (contatosComReuniaoFutura ?? []).map((r: { contato_id: string }) => r.contato_id)
+
+      // Follow-ups agendados: proximo_passo_data futuro, sem reunião agendada
+      let followupsAgendadosQuery = supabase
+        .from('contatos')
+        .select('*', { count: 'exact', head: true })
+        .eq('arquivado', false)
+        .not('proximo_passo_data', 'is', null)
+        .gt('proximo_passo_data', hoje)
+
+      if (idsComReuniao.length > 0) {
+        followupsAgendadosQuery = followupsAgendadosQuery.not('id', 'in', `(${idsComReuniao.join(',')})`)
+      }
+
+      const { count: followupsAgendados } = await followupsAgendadosQuery
 
       const { count: followupsPendentes } = await supabase
         .from('contatos')
@@ -75,9 +96,11 @@ export const dashboardService = {
         contatos_frios: (friosRaw ?? []) as Contato[],
         metricas: {
           contatos_ativos: contatosAtivos ?? 0,
-          reunioes_semana: reunioesSemana ?? 0,
+          reunioes_semana: 0,
           followups_pendentes: followupsPendentes ?? 0,
           dias_em_processo: diasEmProcesso,
+          reunioes_agendadas: reunioesAgendadas ?? 0,
+          followups_agendados: followupsAgendados ?? 0,
         },
       }
     } catch (err) {
