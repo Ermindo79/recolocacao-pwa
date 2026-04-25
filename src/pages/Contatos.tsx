@@ -11,10 +11,10 @@ type ViewMode = 'pessoas' | 'categorias'
 
 const CATEGORIAS: { key: ContactType; label: string; agrupar: boolean }[] = [
   { key: 'empresa', label: 'Empresas', agrupar: true },
-  { key: 'conselho', label: 'Independentes', agrupar: false },
   { key: 'consultoria_estrategia', label: 'Consultorias de Estratégia', agrupar: true },
   { key: 'private_equity', label: 'Private Equity', agrupar: true },
   { key: 'headhunter', label: 'Headhunters', agrupar: true },
+  { key: 'conselho', label: 'Independentes', agrupar: false },
 ]
 
 export default function ContatosPage() {
