@@ -67,6 +67,10 @@ export default function ReuniaoNovaPage() {
 
       if (modoAgendar) {
         await contatosService.updateStage(contatoId, 'reuniao')
+        await contatosService.update(contatoId, {
+          proximo_passo: conteudo.trim() || 'Reunião',
+          proximo_passo_data: data,
+        })
       }
 
       const nomeContato = contatos.find(c => c.id === contatoId)?.nome ?? ''
