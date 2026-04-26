@@ -63,6 +63,7 @@ export default function ReuniaoNovaPage() {
         pendencias: pendencias || undefined,
         proximo_passo: proximoPasso.trim() || '',
         proximo_passo_data: proximoPassoData || data,
+        agendado: modoAgendar,
       })
 
       if (modoAgendar) {
@@ -232,7 +233,7 @@ export default function ReuniaoNovaPage() {
                 type="date"
                 value={proximoPassoData}
                 onChange={(e) => setProximoPassoData(e.target.value)}
-                className="w-full h-12 rounded-xl border border-[rgba(26,26,24,0.18)] bg-white px-3.5 text-[14px] text-ink outline-none focus:border-accent"
+                className="w-full h-12 rounded-xl border border-[rgba(26,26,24,0.18)] bg-white px-3.5 text-ink outline-none focus:border-accent"
               />
             </div>
           </>

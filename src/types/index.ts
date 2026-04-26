@@ -59,6 +59,7 @@ export interface Reuniao {
   pendencias?: string
   proximo_passo: string
   proximo_passo_data: string
+  agendado?: boolean
   created_at: string
 }
 
