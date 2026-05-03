@@ -18,12 +18,28 @@ const TOM_CONFIG = {
   frio:           { label: 'Frio',            className: 'text-[#C0392B]' },
 }
 
-const FORMATO_LABEL = {
+const FORMATO_LABEL: Record<string, string> = {
   ligacao:    'Ligação',
   cafe:       'Café',
   video:      'Vídeo',
   mensagem:   'Mensagem',
   presencial: 'Presencial',
+}
+
+const CALOR_LABEL: Record<string, string> = {
+  quente:      'Quente',
+  medio:       'Médio',
+  frio:        'Frio',
+  sem_contato: 'Sem contato',
+  agendado:    'Agendado',
+}
+
+const TIPO_LABEL: Record<string, string> = {
+  empresa:                'Empresa',
+  consultoria_estrategia: 'Consultoria',
+  private_equity:         'Private Equity',
+  conselho:               'Independente',
+  headhunter:             'Headhunter',
 }
 
 const FORMATOS: { value: MeetingFormat; label: string }[] = [
@@ -62,6 +78,79 @@ const EditIcon = ({ size = 14 }: { size?: number }) => (
   </svg>
 )
 
+const ExportIcon = ({ size = 14 }: { size?: number }) => (
+  <svg width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+    <polyline points="7 10 12 15 17 10"/>
+    <line x1="12" y1="15" x2="12" y2="3"/>
+  </svg>
+)
+
+function gerarTxt(contato: any, reunioes: Reuniao[]): string {
+  const hoje = new Date().toLocaleDateString('pt-BR')
+  const linhas: string[] = []
+
+  // Cabeçalho
+  linhas.push(`CONTATO: ${contato.nome}`)
+
+  const cargo_empresa = [contato.cargo, contato.empresa_nome].filter(Boolean).join(' · ')
+  if (cargo_empresa) linhas.push(`CARGO: ${cargo_empresa}`)
+
+  const categoria = TIPO_LABEL[contato.tipo] ?? contato.tipo
+  const calor = CALOR_LABEL[contato.calor] ?? contato.calor ?? 'Sem contato'
+  linhas.push(`CATEGORIA: ${categoria} | CALOR: ${calor}`)
+
+  if (contato.ponte_contato?.nome) {
+    linhas.push(`INTRODUTOR: ${contato.ponte_contato.nome}`)
+  }
+
+  // Última interação
+  if (reunioes.length > 0) {
+    const ultima = reunioes[0]
+    const dataUltima = ultima.data
+      ? new Date(ultima.data).toLocaleDateString('pt-BR')
+      : '—'
+    linhas.push(`ÚLTIMA INTERAÇÃO: ${dataUltima}`)
+  }
+
+  linhas.push(`Exportado em: ${hoje}`)
+  linhas.push('')
+
+  // Contexto
+  if (contato.notas) {
+    linhas.push('CONTEXTO:')
+    linhas.push(contato.notas)
+    linhas.push('')
+  }
+
+  // Próximo passo
+  if (contato.proximo_passo) {
+    const data_pp = contato.proximo_passo_data
+      ? new Date(contato.proximo_passo_data).toLocaleDateString('pt-BR')
+      : null
+    linhas.push(`PRÓXIMO PASSO${data_pp ? ` (${data_pp})` : ''}:`)
+    linhas.push(contato.proximo_passo)
+    linhas.push('')
+  }
+
+  // Histórico
+  if (reunioes.length > 0) {
+    linhas.push(`HISTÓRICO (${reunioes.length} interaç${reunioes.length === 1 ? 'ão' : 'ões'}):`)
+    reunioes.forEach(r => {
+      const data = r.data ? new Date(r.data).toLocaleDateString('pt-BR') : '—'
+      const formato = r.formato ? FORMATO_LABEL[r.formato] : 'Reunião'
+      const tom = r.tom ? TOM_CONFIG[r.tom]?.label : null
+      const header = `[${data}] ${formato}${tom ? ` · ${tom}` : ''}`
+      linhas.push(header)
+      if (r.conteudo) linhas.push(r.conteudo)
+      if (r.proximo_passo) linhas.push(`→ ${r.proximo_passo}`)
+      linhas.push('')
+    })
+  }
+
+  return linhas.join('\n').trimEnd()
+}
+
 export default function ContatoDetalhePage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -74,6 +163,24 @@ export default function ContatoDetalhePage() {
   const [confirmandoApagar, setConfirmandoApagar] = useState(false)
   const [apagando, setApagando] = useState(false)
   const [draft, setDraft] = useState<Record<string, string>>({})
+
+  function exportarTxt() {
+    if (!contato) return
+    const conteudo = gerarTxt(contato, reunioes)
+    const nomeArquivo = contato.nome
+      .toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, '_')
+      + '.txt'
+    const blob = new Blob([conteudo], { type: 'text/plain;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = nomeArquivo
+    a.click()
+    URL.revokeObjectURL(url)
+    addToast(`${nomeArquivo} exportado.`)
+  }
 
   function abrirEdicao() {
     if (!contato) return
@@ -176,6 +283,13 @@ export default function ContatoDetalhePage() {
             </div>
           ) : (
             <div className="flex gap-2">
+              <button
+                onClick={exportarTxt}
+                className="flex items-center gap-1.5 text-[12px] font-medium text-ink-2 px-3 py-1.5 bg-surface-2 rounded-lg active:opacity-60"
+              >
+                <ExportIcon size={13} />
+                .txt
+              </button>
               <button onClick={abrirEdicao} className="text-[12px] font-medium text-ink-2 px-3 py-1.5 bg-surface-2 rounded-lg">Editar</button>
               <button onClick={() => navigate(`/reuniao/prep/${contato.id}`)} className="text-[12px] font-medium text-accent px-3 py-1.5 bg-accent-lt rounded-lg">Prep →</button>
             </div>
