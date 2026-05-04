@@ -11,9 +11,9 @@ const GLOSSARIO = [
     titulo: 'Calor',
     cor: 'bg-accent-lt text-accent',
     itens: [
-      { termo: 'Agendado', desc: 'Tem reunião futura marcada no app.' },
-      { termo: 'Quente', desc: 'Última interação há 7 dias ou menos.' },
-      { termo: 'Morno', desc: 'Última interação entre 8 e 21 dias.' },
+      { termo: 'Agendado', desc: 'Tem reunião futura marcada no app (formato presencial, café ou vídeo).' },
+      { termo: 'Recente', desc: 'Última interação há 7 dias ou menos.' },
+      { termo: 'Médio', desc: 'Última interação entre 8 e 21 dias.' },
       { termo: 'Frio', desc: 'Última interação entre 22 e 60 dias.' },
       { termo: 'Sem contato', desc: 'Mais de 60 dias sem interação ou nunca houve.' },
     ],
@@ -31,13 +31,14 @@ const GLOSSARIO = [
     ],
   },
   {
-    titulo: 'Cor do Avatar',
-    cor: 'bg-[#FDF5E6] text-[#9A6B1A]',
+    titulo: 'Formatos de interação',
+    cor: 'bg-[#E6F1FB] text-[#0C447C]',
     itens: [
-      { termo: '🟢 Verde', desc: 'Reunião ou Oportunidade (qualquer calor). Quente ou Agendado em Followup.' },
-      { termo: '🔵 Azul', desc: 'Morno em Followup.' },
-      { termo: '🟠 Laranja', desc: 'Frio em Followup. Morno/Quente/Agendado em Acionado.' },
-      { termo: '⚪ Cinza', desc: 'Mapeado, Arquivado, Frio ou Sem contato em qualquer stage.' },
+      { termo: 'Café / Presencial', desc: 'Encontro físico. Conta como Reunião nas métricas.' },
+      { termo: 'Vídeo', desc: 'Videochamada (Zoom, Teams, Meet). Conta como Reunião nas métricas.' },
+      { termo: 'Ligação', desc: 'Chamada de voz. Conta como Follow-up nas métricas.' },
+      { termo: 'Mensagem', desc: 'WhatsApp, email, SMS. Conta como Follow-up nas métricas.' },
+      { termo: 'LinkedIn', desc: 'Interação via LinkedIn. Conta como Follow-up nas métricas.' },
     ],
   },
   {
@@ -45,11 +46,11 @@ const GLOSSARIO = [
     cor: 'bg-[#EEEDFE] text-[#3C3489]',
     itens: [
       { termo: 'Atenção', desc: 'Contatos com próximo passo vencido — você tinha algo a fazer e não fez.' },
-      { termo: 'Próximos 7 dias', desc: 'Reuniões com data entre hoje e 7 dias à frente.' },
-      { termo: 'Silêncios', desc: 'Contatos com calor Frio ou Sem contato que não estão arquivados.' },
+      { termo: 'Próximos 7 dias', desc: 'Reuniões agendadas + próximos passos futuros dos contatos, ordenados por data.' },
+      { termo: 'Silêncios', desc: 'Contatos com calor Frio ou Sem contato, excluindo stage Mapeado e Arquivado.' },
       { termo: 'Contatos (métrica)', desc: 'Ativos nos stages Acionado, Reunião, Followup e Oportunidade.' },
-      { termo: 'Reuniões (métrica)', desc: 'Registradas desde o início da semana atual.' },
-      { termo: 'Follow-ups (métrica)', desc: 'Contatos com próximo passo vencido.' },
+      { termo: 'Reuniões (métrica)', desc: 'Reuniões futuras com formato presencial, café ou vídeo.' },
+      { termo: 'Follow-ups (métrica)', desc: 'Reuniões futuras com formato ligação, mensagem ou LinkedIn + próximos passos futuros sem reunião agendada.' },
     ],
   },
   {
@@ -202,7 +203,6 @@ export default function NarrativaPage() {
           </div>
         )}
 
-        {/* Glossário */}
         <div className="border border-[rgba(26,26,24,0.10)] rounded-xl overflow-hidden">
           <button
             onClick={() => setGlossarioAberto(g => !g)}
