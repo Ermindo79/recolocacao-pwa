@@ -52,6 +52,7 @@ export const dashboardService = {
         .select('*')
         .eq('arquivado', false)
         .in('calor', ['frio', 'sem_contato'])
+        .neq('pipeline_stage', 'mapeado')
         .order('dias_sem_contato', { ascending: false })
         .limit(5)
 
