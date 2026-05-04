@@ -75,9 +75,23 @@ export interface Narrativa {
   updated_at: string
 }
 
+export type EventoTipo = 'reuniao' | 'proximo_passo'
+
+export interface EventoAgenda {
+  id: string
+  tipo: EventoTipo
+  contato_id: string
+  contato_nome: string
+  empresa_nome?: string
+  data: string
+  formato?: MeetingFormat
+  descricao?: string
+}
+
 export interface DashboardData {
   followups_vencidos: Contato[]
   reunioes_proximas: (Reuniao & { contato: Pick<Contato, 'id' | 'nome' | 'empresa_nome'> })[]
+  proximos_agenda: EventoAgenda[]
   contatos_frios: Contato[]
   metricas: {
     contatos_ativos: number

@@ -1,17 +1,27 @@
 import { supabase } from '../lib/supabase'
-import type { DashboardData, Contato, Reuniao } from '../types'
+import type { DashboardData, Contato, Reuniao, EventoAgenda, MeetingFormat } from '../types'
 import { MOCK_DASHBOARD } from '../data/mock'
 
 const USE_MOCK = false
 
+function detectarFormato(texto: string): MeetingFormat | undefined {
+  const t = texto.toLowerCase()
+  if (/caf[eé]|presencial|almo[cç]o|jantar/.test(t)) return 'cafe'
+  if (/liga[cç][aã]o|ligar|telefone/.test(t)) return 'ligacao'
+  if (/v[ií]deo|video|call|zoom|teams|meet/.test(t)) return 'video'
+  if (/mensagem|email|e-mail|whatsapp|linkedin/.test(t)) return 'mensagem'
+  return undefined
+}
+
 export const dashboardService = {
   async get(): Promise<DashboardData> {
-    if (USE_MOCK) return MOCK_DASHBOARD
+    if (USE_MOCK) return { ...MOCK_DASHBOARD, proximos_agenda: [] }
 
     try {
       const hoje = new Date().toISOString().split('T')[0]
       const agora = new Date().toISOString()
       const seteDias = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+      const seteDiasDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
       const inicioProcesso = new Date('2026-02-05').toISOString()
       const diasEmProcesso = Math.floor(
         (Date.now() - new Date(inicioProcesso).getTime()) / (1000 * 60 * 60 * 24)
@@ -33,7 +43,7 @@ export const dashboardService = {
         .gte('data', agora)
         .lte('data', seteDias)
         .order('data', { ascending: true })
-        .limit(5)
+        .limit(10)
 
       if (e2) { console.error('ERRO e2:', e2); throw e2 }
 
@@ -47,27 +57,71 @@ export const dashboardService = {
 
       if (e3) { console.error('ERRO e3:', e3); throw e3 }
 
+      // Próximos passos futuros (contatos com proximo_passo_data nos próximos 7 dias)
+      const { data: proximosPassosRaw, error: e4 } = await supabase
+        .from('contatos')
+        .select('id, nome, empresa_nome, proximo_passo, proximo_passo_data')
+        .eq('arquivado', false)
+        .not('proximo_passo_data', 'is', null)
+        .gt('proximo_passo_data', hoje)
+        .lte('proximo_passo_data', seteDiasDate)
+        .order('proximo_passo_data', { ascending: true })
+
+      if (e4) { console.error('ERRO e4:', e4); throw e4 }
+
+      // IDs de contatos que já têm reunião futura (para não duplicar)
+      const idsComReuniao = new Set(
+        (reunioesRaw ?? []).map((r: any) => r.contato_id)
+      )
+
+      // Montar eventos de reunião
+      const eventosReuniao: EventoAgenda[] = (reunioesRaw ?? []).map((r: any) => ({
+        id: `reuniao-${r.id}`,
+        tipo: 'reuniao' as const,
+        contato_id: r.contato_id,
+        contato_nome: r.contato?.nome ?? '',
+        empresa_nome: r.contato?.empresa_nome ?? '',
+        data: r.data,
+        formato: r.formato ?? undefined,
+        descricao: r.conteudo ?? undefined,
+      }))
+
+      // Montar eventos de próximo passo (excluindo quem já tem reunião)
+      const eventosProximoPasso: EventoAgenda[] = (proximosPassosRaw ?? [])
+        .filter((c: any) => !idsComReuniao.has(c.id))
+        .map((c: any) => ({
+          id: `pp-${c.id}`,
+          tipo: 'proximo_passo' as const,
+          contato_id: c.id,
+          contato_nome: c.nome,
+          empresa_nome: c.empresa_nome ?? '',
+          data: c.proximo_passo_data,
+          formato: c.proximo_passo ? detectarFormato(c.proximo_passo) : undefined,
+          descricao: c.proximo_passo ?? undefined,
+        }))
+
+      // Unificar e ordenar por data
+      const proximosAgenda: EventoAgenda[] = [...eventosReuniao, ...eventosProximoPasso]
+        .sort((a, b) => a.data.localeCompare(b.data))
+
       const { count: contatosAtivos } = await supabase
         .from('contatos')
         .select('*', { count: 'exact', head: true })
         .eq('arquivado', false)
         .in('pipeline_stage', ['acionado', 'reuniao', 'followup', 'oportunidade'])
 
-      // Reuniões agendadas com data futura
       const { count: reunioesAgendadas } = await supabase
         .from('reunioes')
         .select('*', { count: 'exact', head: true })
         .gte('data', agora)
 
-      // IDs de contatos com reunião futura (para excluir dos follow-ups)
       const { data: contatosComReuniaoFutura } = await supabase
         .from('reunioes')
         .select('contato_id')
         .gte('data', agora)
 
-      const idsComReuniao = (contatosComReuniaoFutura ?? []).map((r: { contato_id: string }) => r.contato_id)
+      const idsComReuniaoFutura = (contatosComReuniaoFutura ?? []).map((r: { contato_id: string }) => r.contato_id)
 
-      // Follow-ups agendados: proximo_passo_data futuro, sem reunião agendada
       let followupsAgendadosQuery = supabase
         .from('contatos')
         .select('*', { count: 'exact', head: true })
@@ -75,8 +129,8 @@ export const dashboardService = {
         .not('proximo_passo_data', 'is', null)
         .gt('proximo_passo_data', hoje)
 
-      if (idsComReuniao.length > 0) {
-        followupsAgendadosQuery = followupsAgendadosQuery.not('id', 'in', `(${idsComReuniao.join(',')})`)
+      if (idsComReuniaoFutura.length > 0) {
+        followupsAgendadosQuery = followupsAgendadosQuery.not('id', 'in', `(${idsComReuniaoFutura.join(',')})`)
       }
 
       const { count: followupsAgendados } = await followupsAgendadosQuery
@@ -93,6 +147,7 @@ export const dashboardService = {
         reunioes_proximas: (reunioesRaw ?? []) as (Reuniao & {
           contato: Pick<Contato, 'id' | 'nome' | 'empresa_nome'>
         })[],
+        proximos_agenda: proximosAgenda,
         contatos_frios: (friosRaw ?? []) as Contato[],
         metricas: {
           contatos_ativos: contatosAtivos ?? 0,
