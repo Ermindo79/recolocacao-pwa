@@ -14,6 +14,7 @@ const FORMATOS: { value: MeetingFormat; label: string }[] = [
   { value: 'video', label: 'Vídeo' },
   { value: 'presencial', label: 'Presencial' },
   { value: 'mensagem', label: 'Mensagem' },
+  { value: 'linkedin', label: 'LinkedIn' },
 ]
 
 const TONS: { value: MeetingTone; label: string; className: string; selectedClass: string }[] = [

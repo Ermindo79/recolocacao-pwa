@@ -24,6 +24,7 @@ const FORMATO_LABEL: Record<string, string> = {
   video:      'Vídeo',
   mensagem:   'Mensagem',
   presencial: 'Presencial',
+  linkedin:    'LinkedIn',
 }
 
 const CALOR_LABEL: Record<string, string> = {
