@@ -12,7 +12,7 @@ const TIPOS: { value: ContactType; label: string }[] = [
   { value: 'empresa', label: 'Empresas' },
   { value: 'consultoria_estrategia', label: 'Consultorias de Estratégia' },
   { value: 'private_equity', label: 'Private Equity' },
-  { value: 'conselho', label: 'Membros de Conselho' },
+  { value: 'conselho', label: 'Independentes' },
   { value: 'headhunter', label: 'Headhunter' },
 ]
 
