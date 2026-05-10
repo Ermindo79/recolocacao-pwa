@@ -32,7 +32,7 @@ export const dashboardService = {
         .select('*, empresa:empresas(*), ponte_contato:contatos!ponte_contato_id(id,nome)')
         .eq('arquivado', false)
         .not('proximo_passo_data', 'is', null)
-        .lte('proximo_passo_data', hoje)
+        .lt('proximo_passo_data', hoje)
         .order('proximo_passo_data', { ascending: true })
 
       if (e1) { console.error('ERRO e1:', e1); throw e1 }
@@ -148,7 +148,7 @@ export const dashboardService = {
         .select('*', { count: 'exact', head: true })
         .eq('arquivado', false)
         .not('proximo_passo_data', 'is', null)
-        .lte('proximo_passo_data', hoje)
+        .lt('proximo_passo_data', hoje)
 
       return {
         followups_vencidos: (followupsRaw ?? []) as Contato[],

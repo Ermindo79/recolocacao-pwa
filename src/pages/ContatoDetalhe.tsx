@@ -24,11 +24,12 @@ const FORMATO_LABEL: Record<string, string> = {
   video:      'Vídeo',
   mensagem:   'Mensagem',
   presencial: 'Presencial',
-  linkedin:    'LinkedIn',
+  linkedin:   'LinkedIn',
+  email:      'E-mail',
 }
 
 const CALOR_LABEL: Record<string, string> = {
-  quente:      'Quente',
+  quente:      'Recente',
   medio:       'Médio',
   frio:        'Frio',
   sem_contato: 'Sem contato',
@@ -49,6 +50,8 @@ const FORMATOS: { value: MeetingFormat; label: string }[] = [
   { value: 'video', label: 'Vídeo' },
   { value: 'mensagem', label: 'Mensagem' },
   { value: 'presencial', label: 'Presencial' },
+  { value: 'linkedin', label: 'LinkedIn' },
+  { value: 'email', label: 'E-mail' },
 ]
 
 const TONS: { value: MeetingTone; label: string; className: string; selectedClass: string }[] = [
@@ -91,7 +94,6 @@ function gerarTxt(contato: any, reunioes: Reuniao[]): string {
   const hoje = new Date().toLocaleDateString('pt-BR')
   const linhas: string[] = []
 
-  // Cabeçalho
   linhas.push(`CONTATO: ${contato.nome}`)
 
   const cargo_empresa = [contato.cargo, contato.empresa_nome].filter(Boolean).join(' · ')
@@ -105,7 +107,6 @@ function gerarTxt(contato: any, reunioes: Reuniao[]): string {
     linhas.push(`INTRODUTOR: ${contato.ponte_contato.nome}`)
   }
 
-  // Última interação
   if (reunioes.length > 0) {
     const ultima = reunioes[0]
     const dataUltima = ultima.data
@@ -117,14 +118,12 @@ function gerarTxt(contato: any, reunioes: Reuniao[]): string {
   linhas.push(`Exportado em: ${hoje}`)
   linhas.push('')
 
-  // Contexto
   if (contato.notas) {
     linhas.push('CONTEXTO:')
     linhas.push(contato.notas)
     linhas.push('')
   }
 
-  // Próximo passo
   if (contato.proximo_passo) {
     const data_pp = contato.proximo_passo_data
       ? new Date(contato.proximo_passo_data).toLocaleDateString('pt-BR')
@@ -134,7 +133,6 @@ function gerarTxt(contato: any, reunioes: Reuniao[]): string {
     linhas.push('')
   }
 
-  // Histórico
   if (reunioes.length > 0) {
     linhas.push(`HISTÓRICO (${reunioes.length} interaç${reunioes.length === 1 ? 'ão' : 'ões'}):`)
     reunioes.forEach(r => {
@@ -144,6 +142,7 @@ function gerarTxt(contato: any, reunioes: Reuniao[]): string {
       const header = `[${data}] ${formato}${tom ? ` · ${tom}` : ''}`
       linhas.push(header)
       if (r.conteudo) linhas.push(r.conteudo)
+      if (r.pendencias) linhas.push(`⚠ Pendência: ${r.pendencias}`)
       if (r.proximo_passo) linhas.push(`→ ${r.proximo_passo}`)
       linhas.push('')
     })
@@ -496,6 +495,7 @@ function ReuniaoItem({ reuniao, isFirst, onDelete, onUpdate }: {
   const [draftFormato, setDraftFormato] = useState<MeetingFormat | ''>(reuniao.formato ?? '')
   const [draftTom, setDraftTom] = useState<MeetingTone | ''>(reuniao.tom ?? '')
   const [draftConteudo, setDraftConteudo] = useState(reuniao.conteudo ?? '')
+  const [draftPendencias, setDraftPendencias] = useState(reuniao.pendencias ?? '')
 
   const tom = reuniao.tom ? TOM_CONFIG[reuniao.tom] : null
 
@@ -505,6 +505,7 @@ function ReuniaoItem({ reuniao, isFirst, onDelete, onUpdate }: {
     setDraftFormato(reuniao.formato ?? '')
     setDraftTom(reuniao.tom ?? '')
     setDraftConteudo(reuniao.conteudo ?? '')
+    setDraftPendencias(reuniao.pendencias ?? '')
     setEditando(true)
     setConfirmando(false)
   }
@@ -518,6 +519,7 @@ function ReuniaoItem({ reuniao, isFirst, onDelete, onUpdate }: {
         formato: draftFormato || undefined,
         tom: draftTom || undefined,
         conteudo: draftConteudo || undefined,
+        pendencias: draftPendencias || undefined,
       })
       setEditando(false)
     } catch {
@@ -564,6 +566,12 @@ function ReuniaoItem({ reuniao, isFirst, onDelete, onUpdate }: {
                   <p className={clsx('text-[12px] text-ink-2 leading-relaxed', !expandido && 'line-clamp-3')}>
                     {reuniao.conteudo}
                   </p>
+                )}
+                {expandido && reuniao.pendencias && (
+                  <div className="mt-1.5 bg-[#FDF5E6] border border-[rgba(154,107,26,0.15)] rounded-lg px-2.5 py-1.5">
+                    <p className="text-[10px] font-medium text-[#9A6B1A] uppercase tracking-[0.06em] mb-0.5">Pendência</p>
+                    <p className="text-[11px] text-[#9A6B1A]">{reuniao.pendencias}</p>
+                  </div>
                 )}
                 {reuniao.proximo_passo && (
                   <p className="text-[11px] text-ink-3 mt-1">→ {reuniao.proximo_passo}</p>
@@ -635,6 +643,13 @@ function ReuniaoItem({ reuniao, isFirst, onDelete, onUpdate }: {
             <textarea value={draftConteudo} onChange={e => setDraftConteudo(e.target.value)} rows={4}
               onClick={e => e.stopPropagation()}
               className="w-full rounded-xl border border-[rgba(26,26,24,0.18)] bg-white px-3 py-2.5 text-[13px] text-ink placeholder:text-ink-4 outline-none focus:border-accent resize-none" />
+          </div>
+          <div>
+            <label className={labelClass}>Pendências</label>
+            <input value={draftPendencias} onChange={e => setDraftPendencias(e.target.value)}
+              onClick={e => e.stopPropagation()}
+              placeholder="O que ficou para resolver..."
+              className={inputClass} />
           </div>
           <div className="flex gap-2 pt-1">
             <button onClick={e => { e.stopPropagation(); setEditando(false) }}

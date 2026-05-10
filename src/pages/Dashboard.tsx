@@ -17,6 +17,7 @@ const FORMATO_COR: Record<string, { bg: string; text: string; dot: string }> = {
   cafe:       { bg: 'bg-[#EAF3DE]', text: 'text-[#27500A]', dot: 'bg-[#639922]' },
   presencial: { bg: 'bg-[#EAF3DE]', text: 'text-[#27500A]', dot: 'bg-[#639922]' },
   linkedin:   { bg: 'bg-[#E6F1FB]', text: 'text-[#0C447C]', dot: 'bg-[#378ADD]' },
+  email:      { bg: 'bg-[#E6F1FB]', text: 'text-[#0C447C]', dot: 'bg-[#378ADD]' },
   default:    { bg: 'bg-accent-lt',  text: 'text-accent',    dot: 'bg-accent' },
 }
 

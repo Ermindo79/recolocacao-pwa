@@ -15,6 +15,7 @@ const FORMATOS: { value: MeetingFormat; label: string }[] = [
   { value: 'presencial', label: 'Presencial' },
   { value: 'mensagem', label: 'Mensagem' },
   { value: 'linkedin', label: 'LinkedIn' },
+  { value: 'email', label: 'E-mail' },
 ]
 
 const TONS: { value: MeetingTone; label: string; className: string; selectedClass: string }[] = [

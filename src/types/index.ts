@@ -1,6 +1,6 @@
 export type ContactType = 'empresa' | 'consultoria_estrategia' | 'private_equity' | 'conselho' | 'headhunter'
 export type ContactHeat = 'quente' | 'morno' | 'frio' | 'sem_contato' | 'agendado'
-export type MeetingFormat = 'ligacao' | 'cafe' | 'video' | 'mensagem' | 'presencial'
+export type MeetingFormat = 'ligacao' | 'cafe' | 'video' | 'mensagem' | 'presencial' | 'linkedin' | 'email'
 export type MeetingTone = 'muito_positivo' | 'aberto' | 'neutro' | 'frio'
 export type PipelineStage =
   | 'mapeado'
