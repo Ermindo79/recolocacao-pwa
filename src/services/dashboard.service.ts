@@ -18,7 +18,7 @@ export const dashboardService = {
     if (USE_MOCK) return { ...MOCK_DASHBOARD, proximos_agenda: [] }
 
     try {
-      const hoje = new Date().toISOString().split('T')[0]
+      const hoje = new Date().toLocaleDateString('sv-SE') // sv-SE retorna formato YYYY-MM-DD no timezone local
       const agora = new Date().toISOString()
       const seteDias = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
       const seteDiasDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]

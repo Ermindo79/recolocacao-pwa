@@ -1,4 +1,4 @@
-import { formatDistanceToNow, differenceInDays, isPast, parseISO, format } from 'date-fns'
+import { formatDistanceToNow, differenceInDays, parseISO, format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import type { ContactHeat, Contato, PipelineStage } from '../types'
 import clsx from 'clsx'
@@ -20,7 +20,10 @@ export function diasSemContato(ultimaInteracaoAt?: string): number {
 
 export function followupVencido(data?: string): boolean {
   if (!data) return false
-  return isPast(parseISO(data))
+  // Compara só a data, sem hora, para evitar problema de timezone
+  const hoje = new Date().toISOString().split('T')[0]
+  const dataStr = data.split('T')[0]
+  return dataStr < hoje
 }
 
 export function formatarData(iso: string): string {
@@ -36,7 +39,11 @@ export function tempoAtras(iso: string): string {
 }
 
 export function diasRestantes(iso: string): number {
-  return differenceInDays(parseISO(iso), new Date())
+  // Compara só datas sem hora para evitar problema de timezone
+  const hoje = new Date().toISOString().split('T')[0]
+  const dataStr = iso.split('T')[0]
+  const diff = (new Date(dataStr).getTime() - new Date(hoje).getTime()) / (1000 * 60 * 60 * 24)
+  return Math.round(diff)
 }
 
 export function iniciais(nome: string): string {
