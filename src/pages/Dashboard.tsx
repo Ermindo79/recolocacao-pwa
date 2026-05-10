@@ -8,7 +8,7 @@ import {
 import { FollowUpCard } from '../components/contato/ContatoCard'
 import { ContatoCard } from '../components/contato/ContatoCard'
 import { saudacao, diasRestantes, clsx } from '../utils'
-import type { EventoAgenda } from '../types'
+import type { EventoAgenda, PendenciaAberta } from '../types'
 
 const FORMATO_COR: Record<string, { bg: string; text: string; dot: string }> = {
   ligacao:    { bg: 'bg-[#E6F1FB]', text: 'text-[#0C447C]', dot: 'bg-[#378ADD]' },
@@ -152,6 +152,17 @@ export default function DashboardPage() {
           </div>
         )}
 
+{data && data.pendencias_abertas.length > 0 && (
+          <div>
+            <SectionHeader label="Pendências em aberto" count={data.pendencias_abertas.length} />
+            <div className="space-y-2">
+              {data.pendencias_abertas.map((p) => (
+                <PendenciaCard key={p.contato_id} pendencia={p} />
+              ))}
+            </div>
+          </div>
+        )}
+
         {data && data.contatos_frios.length > 0 && (
           <div>
             <SectionHeader label="Silêncios" count={data.contatos_frios.length} />
@@ -195,5 +206,30 @@ function MetricCard({ value, label, alert }: { value: number; label: string; ale
       </p>
       <p className="text-[10px] text-ink-4 leading-tight">{label}</p>
     </div>
+  )
+}
+
+function PendenciaCard({ pendencia }: { pendencia: PendenciaAberta }) {
+  const navigate = useNavigate()
+  const data = pendencia.data
+    ? new Date(pendencia.data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+    : ''
+
+  return (
+    <button
+      onClick={() => navigate(`/contatos/${pendencia.contato_id}`)}
+      className="w-full text-left bg-white border border-[rgba(26,26,24,0.10)] rounded-xl px-3.5 py-3 active:opacity-80 transition-opacity"
+    >
+      <div className="flex items-start justify-between gap-2 mb-1.5">
+        <p className="text-[13px] font-medium text-ink truncate">{pendencia.contato_nome}</p>
+        <span className="text-[10px] text-ink-4 shrink-0">{data}</span>
+      </div>
+      {pendencia.empresa_nome && (
+        <p className="text-[11px] text-ink-3 mb-2">{pendencia.empresa_nome}</p>
+      )}
+      <div className="bg-[#FDF5E6] border border-[rgba(154,107,26,0.15)] rounded-lg px-2.5 py-1.5">
+        <p className="text-[11px] text-[#9A6B1A]">{pendencia.pendencia}</p>
+      </div>
+    </button>
   )
 }

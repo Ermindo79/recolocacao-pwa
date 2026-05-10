@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase'
-import type { DashboardData, Contato, Reuniao, EventoAgenda, MeetingFormat } from '../types'
+import type { DashboardData, Contato, Reuniao, EventoAgenda, MeetingFormat, PendenciaAberta } from '../types'
 import { MOCK_DASHBOARD } from '../data/mock'
 
 const USE_MOCK = false
@@ -150,12 +150,38 @@ export const dashboardService = {
         .not('proximo_passo_data', 'is', null)
         .lt('proximo_passo_data', hoje)
 
+      // Buscar contatos com pendências em aberto
+      const { data: pendenciasRaw, error: e5 } = await supabase
+        .from('reunioes')
+        .select('contato_id, data, pendencias, contato:contatos(id, nome, empresa_nome)')
+        .not('pendencias', 'is', null)
+        .neq('pendencias', '')
+        .order('data', { ascending: false })
+
+      if (e5) { console.error('ERRO e5:', e5); throw e5 }
+
+      // Pegar a pendência mais recente por contato
+      const pendenciasMap = new Map<string, PendenciaAberta>()
+      ;(pendenciasRaw ?? []).forEach((r: any) => {
+        if (!pendenciasMap.has(r.contato_id)) {
+          pendenciasMap.set(r.contato_id, {
+            contato_id: r.contato_id,
+            contato_nome: r.contato?.nome ?? '',
+            empresa_nome: r.contato?.empresa_nome ?? '',
+            data: r.data,
+            pendencia: r.pendencias,
+          })
+        }
+      })
+      const pendenciasAbertas = Array.from(pendenciasMap.values())
+
       return {
         followups_vencidos: (followupsRaw ?? []) as Contato[],
         reunioes_proximas: (reunioesRaw ?? []) as (Reuniao & {
           contato: Pick<Contato, 'id' | 'nome' | 'empresa_nome'>
         })[],
         proximos_agenda: proximosAgenda,
+        pendencias_abertas: pendenciasAbertas,
         contatos_frios: (friosRaw ?? []) as Contato[],
         metricas: {
           contatos_ativos: contatosAtivos ?? 0,
