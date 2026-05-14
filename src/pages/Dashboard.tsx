@@ -1,3 +1,4 @@
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDashboard } from '../hooks'
 import { PageWrapper, FAB } from '../components/layout'
@@ -240,7 +241,7 @@ function PendenciaCard({ pendencia }: { pendencia: PendenciaAberta }) {
 function PendenciaCardV2({ pendencia }: { pendencia: PendenciaAberta }) {
   const navigate = useNavigate()
   const qc = useQueryClient()
-  const [concluindo, setConcluindo] = React.useState(false)
+  const [concluindo, setConcluindo] = useState(false)
   const data = pendencia.data
     ? new Date(pendencia.data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
     : ''
