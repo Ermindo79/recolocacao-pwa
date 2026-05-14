@@ -2,12 +2,21 @@ import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Contato } from '../../types'
 import { Avatar, CalorBadge, PrimarioBadge } from '../ui'
-import { clsx, formatarData } from '../../utils'
+import { clsx, formatarData, STAGE_LABELS } from '../../utils'
 
 interface ContatoCardProps {
   contato: Contato
   showPrioridade?: boolean
   compact?: boolean
+}
+
+const STAGE_PILL: Record<string, string> = {
+  mapeado:      'bg-surface-2 text-ink-3',
+  acionado:     'bg-surface-2 text-ink-2',
+  reuniao:      'bg-[#EBF5F0] text-[#1A6B45]',
+  followup:     'bg-accent-lt text-accent',
+  oportunidade: 'bg-[#EEEDFE] text-[#3C3489]',
+  arquivado:    'bg-surface-2 text-ink-4',
 }
 
 function getSubtexto(contato: Contato): string {
@@ -27,6 +36,8 @@ export function ContatoCard({ contato, showPrioridade = true, compact = false }:
   const navigate = useNavigate()
   const vencido = contato.followup_vencido
   const ponteNome = contato.ponte_contato?.nome?.split(' ')[0] ?? contato.ponte_contato_nome?.split(' ')[0]
+  const stageClass = STAGE_PILL[contato.pipeline_stage] ?? 'bg-surface-2 text-ink-3'
+  const stageLabel = STAGE_LABELS[contato.pipeline_stage] ?? contato.pipeline_stage
 
   return (
     <button
@@ -53,6 +64,9 @@ export function ContatoCard({ contato, showPrioridade = true, compact = false }:
         <p className="text-[11px] text-ink-3 truncate">
           {getSubtexto(contato)}
         </p>
+        <span className={clsx('inline-block text-[9px] font-medium px-1.5 py-0.5 rounded-full mt-1', stageClass)}>
+          {stageLabel}
+        </span>
       </div>
 
       <div className="flex flex-col items-end gap-1 shrink-0">

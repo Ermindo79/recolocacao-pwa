@@ -63,7 +63,7 @@ export const dashboardService = {
         .select('id, nome, empresa_nome, proximo_passo, proximo_passo_data')
         .eq('arquivado', false)
         .not('proximo_passo_data', 'is', null)
-        .gt('proximo_passo_data', hoje)
+        .gte('proximo_passo_data', hoje)
         .lte('proximo_passo_data', seteDiasDate)
         .order('proximo_passo_data', { ascending: true })
 
@@ -132,7 +132,7 @@ export const dashboardService = {
         .select('*', { count: 'exact', head: true })
         .eq('arquivado', false)
         .not('proximo_passo_data', 'is', null)
-        .gt('proximo_passo_data', hoje)
+        .gte('proximo_passo_data', hoje)
 
       if (idsComReuniaoFutura.length > 0) {
         proximosPassosSemReuniaoQuery = proximosPassosSemReuniaoQuery
@@ -153,9 +153,10 @@ export const dashboardService = {
       // Buscar contatos com pendências em aberto
       const { data: pendenciasRaw, error: e5 } = await supabase
         .from('reunioes')
-        .select('contato_id, data, pendencias, contato:contatos(id, nome, empresa_nome)')
+        .select('contato_id, id, data, pendencias, contato:contatos(id, nome, empresa_nome)')
         .not('pendencias', 'is', null)
         .neq('pendencias', '')
+        .neq('pendencia_concluida', true)
         .order('data', { ascending: false })
 
       if (e5) { console.error('ERRO e5:', e5); throw e5 }
@@ -169,6 +170,7 @@ export const dashboardService = {
             contato_nome: r.contato?.nome ?? '',
             empresa_nome: r.contato?.empresa_nome ?? '',
             data: r.data,
+            reuniao_id: r.id,
             pendencia: r.pendencias,
           })
         }

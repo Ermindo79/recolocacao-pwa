@@ -8,6 +8,9 @@ import {
 import { FollowUpCard } from '../components/contato/ContatoCard'
 import { ContatoCard } from '../components/contato/ContatoCard'
 import { saudacao, diasRestantes, clsx } from '../utils'
+import { reunioesService } from '../services/reunioes.service'
+import { useQueryClient } from '@tanstack/react-query'
+import { KEYS } from '../hooks'
 import type { EventoAgenda, PendenciaAberta } from '../types'
 
 const FORMATO_COR: Record<string, { bg: string; text: string; dot: string }> = {
@@ -157,7 +160,7 @@ export default function DashboardPage() {
             <SectionHeader label="Pendências em aberto" count={data.pendencias_abertas.length} />
             <div className="space-y-2">
               {data.pendencias_abertas.map((p) => (
-                <PendenciaCard key={p.contato_id} pendencia={p} />
+                <PendenciaCardV2 key={p.contato_id} pendencia={p} />
               ))}
             </div>
           </div>
@@ -231,5 +234,55 @@ function PendenciaCard({ pendencia }: { pendencia: PendenciaAberta }) {
         <p className="text-[11px] text-[#9A6B1A]">{pendencia.pendencia}</p>
       </div>
     </button>
+  )
+}
+
+function PendenciaCardV2({ pendencia }: { pendencia: PendenciaAberta }) {
+  const navigate = useNavigate()
+  const qc = useQueryClient()
+  const [concluindo, setConcluindo] = React.useState(false)
+  const data = pendencia.data
+    ? new Date(pendencia.data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+    : ''
+
+  async function handleConcluir(e: React.MouseEvent) {
+    e.stopPropagation()
+    setConcluindo(true)
+    try {
+      await reunioesService.concluirPendencia(pendencia.reuniao_id)
+      await qc.invalidateQueries({ queryKey: KEYS.dashboard })
+    } catch {
+      setConcluindo(false)
+    }
+  }
+
+  return (
+    <div className="bg-white border border-[rgba(26,26,24,0.10)] rounded-xl px-3.5 py-3">
+      <button
+        onClick={() => navigate(`/contatos/${pendencia.contato_id}`)}
+        className="w-full text-left active:opacity-70"
+      >
+        <div className="flex items-start justify-between gap-2 mb-1.5">
+          <p className="text-[13px] font-medium text-ink truncate">{pendencia.contato_nome}</p>
+          <span className="text-[10px] text-ink-4 shrink-0">{data}</span>
+        </div>
+        {pendencia.empresa_nome && (
+          <p className="text-[11px] text-ink-3 mb-2">{pendencia.empresa_nome}</p>
+        )}
+        <div className="bg-[#FDF5E6] border border-[rgba(154,107,26,0.15)] rounded-lg px-2.5 py-1.5 mb-2">
+          <p className="text-[11px] text-[#9A6B1A]">{pendencia.pendencia}</p>
+        </div>
+      </button>
+      <button
+        onClick={handleConcluir}
+        disabled={concluindo}
+        className="flex items-center gap-1.5 text-[11px] font-medium text-[#1A6B45] bg-[#EBF5F0] px-2.5 py-1.5 rounded-lg active:opacity-70 disabled:opacity-50"
+      >
+        <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        {concluindo ? 'Concluindo...' : 'Concluir pendência'}
+      </button>
+    </div>
   )
 }

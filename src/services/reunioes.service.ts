@@ -36,4 +36,13 @@ export const reunioesService = {
     const { error } = await supabase.from('reunioes').delete().eq('id', id)
     if (error) throw error
   },
+
+  async concluirPendencia(id: string): Promise<void> {
+    if (USE_MOCK) return
+    const { error } = await supabase
+      .from('reunioes')
+      .update({ pendencia_concluida: true })
+      .eq('id', id)
+    if (error) throw error
+  },
 }

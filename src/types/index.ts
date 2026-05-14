@@ -60,6 +60,7 @@ export interface Reuniao {
   proximo_passo: string
   proximo_passo_data: string
   agendado?: boolean
+  pendencia_concluida?: boolean
   created_at: string
 }
 
@@ -88,10 +89,20 @@ export interface EventoAgenda {
   descricao?: string
 }
 
+export interface PendenciaAberta {
+  reuniao_id: string
+  contato_id: string
+  contato_nome: string
+  empresa_nome?: string
+  data: string
+  pendencia: string
+}
+
 export interface DashboardData {
   followups_vencidos: Contato[]
   reunioes_proximas: (Reuniao & { contato: Pick<Contato, 'id' | 'nome' | 'empresa_nome'> })[]
   proximos_agenda: EventoAgenda[]
+  pendencias_abertas: PendenciaAberta[]
   contatos_frios: Contato[]
   metricas: {
     contatos_ativos: number
