@@ -21,7 +21,7 @@ export const dashboardService = {
       const hoje = new Date().toLocaleDateString('sv-SE') // sv-SE retorna formato YYYY-MM-DD no timezone local
       const agora = new Date().toISOString()
       const seteDias = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-      const seteDiasDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      const seteDiasDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('sv-SE')
       const inicioProcesso = new Date('2026-02-05').toISOString()
       const diasEmProcesso = Math.floor(
         (Date.now() - new Date(inicioProcesso).getTime()) / (1000 * 60 * 60 * 24)
